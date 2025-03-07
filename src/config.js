@@ -1,32 +1,32 @@
-const hostApi = process.env.NODE_ENV === "development"
-  ? "http://localhost"
-  : "https://sing-generator-node.herokuapp.com";
-const portApi = process.env.NODE_ENV === "development" ? 8080 : "";
-const baseURLApi = `${hostApi}${portApi ? `:${portApi}` : ``}/api`;
-const redirectUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://flatlogic.github.io/react-material-admin-full";
+// @next
+import { Archivo, Figtree, Roboto } from 'next/font/google';
 
-export default {
-  hostApi,
-  portApi,
-  baseURLApi,
-  redirectUrl,
-  remote: "https://sing-generator-node.herokuapp.com",
-  isBackend: process.env.REACT_APP_BACKEND,
-  auth: {
-    email: 'admin@flatlogic.com',
-    password: 'password',
-  },
-  app: {
-    colors: {
-      dark: '#002B49',
-      light: '#FFFFFF',
-      sea: '#004472',
-      sky: '#E9EBEF',
-      wave: '#D1E7F6',
-      rain: '#CCDDE9',
-      middle: '#D7DFE6',
-      black: '#13191D',
-      salat: '#21AE8C',
-    },
-  },
+export let Themes;
+
+(function (Themes) {
+  Themes['THEME_CRM'] = 'crm';
+  Themes['THEME_AI'] = 'ai';
+  Themes['THEME_CRYPTO'] = 'crypto';
+  Themes['THEME_HOSTING'] = 'hosting';
+  Themes['THEME_PMS'] = 'pms';
+  Themes['THEME_HRM'] = 'hrm';
+  Themes['THEME_PLUGIN'] = 'plugin';
+})(Themes || (Themes = {}));
+
+/***************************  CONFIG  ***************************/
+
+const config = {
+  currentTheme: Themes.THEME_AI
 };
+
+export default config;
+
+/***************************  THEME - FONT FAMILY  ***************************/
+
+const fontRobot = Roboto({ subsets: ['latin'], weight: ['100', '300', '400', '500', '700', '900'] });
+const fontArchivo = Archivo({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
+const fontFigtree = Figtree({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
+
+export const FONT_ROBOTO = fontRobot.style.fontFamily;
+export const FONT_ARCHIVO = fontArchivo.style.fontFamily;
+export const FONT_FIGTREE = fontFigtree.style.fontFamily;
