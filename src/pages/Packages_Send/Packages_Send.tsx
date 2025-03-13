@@ -8,6 +8,7 @@ import { Modal } from "../../components/ui/modal";
 import FileInputExample from "../../components/form/form-elements/FileInputExample";
 import DefaultInputs from "../../components/form/form-elements/DefaultInputs";
 import Insert_Packages from "../../components/form/form-elements/Insert_Packages";
+import PAGE_NAME from "../../pronto";
 
 export default function Packages_Send() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,7 +25,7 @@ export default function Packages_Send() {
   return (
     <>
       <PageMeta
-        title="React.js Basic Tables Dashboard | TailAdmin - Next.js Admin Dashboard Template"
+        title ={`${PAGE_NAME} - Paquetes`}
         description="This is React.js Basic Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <PageBreadcrumb pageTitle="Paquetes de Guatemala" />
@@ -35,7 +36,7 @@ export default function Packages_Send() {
           <ComponentCard title="Semana 2 de Marzo del 2025">
           <Modal isOpen={isModalOpen} onClose={closeModal} showCloseButton={true}>
            <div>
-            <Insert_Packages />
+            <Insert_Packages open={undefined} handleClose={undefined} />
            </div>
           </Modal>
 

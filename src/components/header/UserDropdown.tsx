@@ -2,13 +2,24 @@ import { useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link } from "react-router";
+import useToken, { parseJwt } from "../../hooks/useToken";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const { token , setToken} = useToken();
+  const jwt = token ? parseJwt(token) : null;
+  const rol = jwt ? jwt.rol : null;
+  const usuario = jwt ? jwt.usuario : null;
+  const oficina = jwt ? jwt.oficina : null;
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
   }
+
+  const handleLogout = () => {
+    setToken(null); // Elimina el token
+  };
+
 
   function closeDropdown() {
     setIsOpen(false);
@@ -19,11 +30,11 @@ export default function UserDropdown() {
         onClick={toggleDropdown}
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
+        {/* <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
           <img src="/images/user/owner.jpg" alt="User" />
-        </span>
+        </span> */}
 
-        <span className="block mr-1 font-medium text-theme-sm">Musharof</span>
+        <span className="block mr-1 font-medium text-theme-sm">{usuario}</span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -51,15 +62,18 @@ export default function UserDropdown() {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            Musharof Chowdhury
+            {usuario}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            randomuser@pimjo.com
+            {rol}
+          </span>
+          <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
+            Oficina: {oficina}
           </span>
         </div>
 
         <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
-          <li>
+          {/* <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -83,8 +97,8 @@ export default function UserDropdown() {
               </svg>
               Edit profile
             </DropdownItem>
-          </li>
-          <li>
+          </li> */}
+          {/* <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -108,8 +122,8 @@ export default function UserDropdown() {
               </svg>
               Account settings
             </DropdownItem>
-          </li>
-          <li>
+          </li> */}
+          {/* <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -133,10 +147,11 @@ export default function UserDropdown() {
               </svg>
               Support
             </DropdownItem>
-          </li>
+          </li> */}
         </ul>
         <Link
           to="/signin"
+          onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
         >
           <svg

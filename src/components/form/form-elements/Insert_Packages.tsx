@@ -5,6 +5,7 @@ import Label from "../Label";
 import Input from "../input/InputField";
 import Select from "../Select";
 import TextArea from "../input/TextArea";
+import { UploadImage } from "../../UploadImage/UploadImage";
 
 const steps = ["Información Paquete", "Información Cliente", "Método de Pago"];
 
@@ -20,6 +21,8 @@ export default function InsertPackagesStepper({ open, handleClose }) {
   const [selectedClientEnvia, setSelectedClientEnvia] = useState<string | null>(null);
   const [isAddingNewClientRecibe, setIsAddingNewClientRecibe] = useState(false);
   const [isAddingNewClientEnvia, setIsAddingNewClientEnvia] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
 
   // Opciones para el tipo de paquete
   const options = [
@@ -182,6 +185,10 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                           placeholder="Dirección del Cliente Recibe"
                         />
                       </div>
+                      <div>
+                      <Label htmlFor="address">Subir Foto DPI</Label>
+                      <UploadImage file={file} setFile={setFile} />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -231,6 +238,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                           onChange={(e) => setNewClientName(e.target.value)}
                           placeholder="Nombre del Cliente Envia"
                         />
+                        
                       </div>
                       <div>
                         <Label htmlFor="phone">Teléfono</Label>
@@ -251,6 +259,10 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                           onChange={(e) => setNewClientAddress(e.target.value)}
                           placeholder="Dirección del Cliente Envia"
                         />
+                      </div>
+                      <div>
+                      <Label htmlFor="address">Subir Foto DPI</Label>
+                      <UploadImage file={file} setFile={setFile} />
                       </div>
                     </div>
                   </div>

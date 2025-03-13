@@ -1,70 +1,84 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
-import UserProfiles from "./pages/UserProfiles";
-import Videos from "./pages/UiElements/Videos";
-import Images from "./pages/UiElements/Images";
-import Alerts from "./pages/UiElements/Alerts";
-import Badges from "./pages/UiElements/Badges";
-import Avatars from "./pages/UiElements/Avatars";
-import Buttons from "./pages/UiElements/Buttons";
-import LineChart from "./pages/Charts/LineChart";
-import BarChart from "./pages/Charts/BarChart";
-import Calendar from "./pages/Calendar";
-import BasicTables from "./pages/Tables/BasicTables";
-import FormElements from "./pages/Forms/FormElements";
-import Blank from "./pages/Blank";
+// import UserProfiles from "./pages/UserProfiles";
+// import Videos from "./pages/UiElements/Videos";
+// import Images from "./pages/UiElements/Images";
+// import Alerts from "./pages/UiElements/Alerts";
+// import Badges from "./pages/UiElements/Badges";
+// import Avatars from "./pages/UiElements/Avatars";
+// import Buttons from "./pages/UiElements/Buttons";
+// import LineChart from "./pages/Charts/LineChart";
+// import BarChart from "./pages/Charts/BarChart";
+// import Calendar from "./pages/Calendar";
+// import BasicTables from "./pages/Tables/BasicTables";
+// import FormElements from "./pages/Forms/FormElements";
+// import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 
-import Home from "./pages/Dashboard/Home";
+// import Home from "./pages/Dashboard/Home";
 import Packages_Send from "./pages/Packages_Send/Packages_Send";
+import { useEffect, useState } from "react";
+import useApi from "./hooks/useApi";
+import source_link from "./repositori/source_repo";
+import useToken, { parseJwt } from "./hooks/useToken";
+import BasicTables from "./pages/Tables/BasicTables";
+
 
 export default function App() {
+  const { llamado: validate_token } = useApi(`${source_link}/validate_token`);
+  const { token } = useToken();
+  const jwt = token ? parseJwt(token) : null;
+  const rol = jwt ? jwt.rol : null;
+  const [isValid, setValid] = useState(false); // Cambiamos false -> null para manejar el estado de carga
+
+  useEffect(() => {
+    const validate = async () => {
+      const body = { token };
+      try {
+        const response = await validate_token(body, "POST");
+        setValid(response.success);
+      } catch (error) {
+        console.error("Error validando el token:", error);
+        setValid(false); // En caso de error, se considera inválido
+      }
+    };
+
+    if (token) {
+      validate();
+    } else {
+      setValid(false); // Si no hay token, directamente se pone en false
+    }
+  }, [token]);
+
+  // Mientras se valida el token, mostramos un mensaje de carga
+  if (isValid === null) {
+    return <div>Cargando...</div>;
+  }
+
   return (
-    <>
-      <Router>
-        <ScrollToTop />
-        <Routes>
-          {/* Dashboard Layout */}
+    <Router>
+      <ScrollToTop />
+      <Routes>
+        {/* Si no hay token o el token es inválido, redirigir a SignIn */}
+        {!isValid ? (
+          <>
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="*" element={<Navigate to="/signin" />} />
+          </>
+        ) : (
+          // Si el token es válido, mostrar el contenido según el rol
+          
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<SignIn/>} />
+            <Route index path="/" element={rol === "admin" ? <Packages_Send /> : <BasicTables />} />
+            <Route path="/paquetes" element={<Packages_Send />} />
 
-            {/* Others Page */}
-            <Route path="/home" element={<Home />} />
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/blank" element={<Blank />} />
-            <Route path="/paquetes" element={<Packages_Send/>} />
-
-            {/* Forms */}
-            <Route path="/form-elements" element={<FormElements />} />
-
-            {/* Tables */}
-            <Route path="/basic-tables" element={<BasicTables />} />
-
-            {/* Ui Elements */}
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/avatars" element={<Avatars />} />
-            <Route path="/badge" element={<Badges />} />
-            <Route path="/buttons" element={<Buttons />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/videos" element={<Videos />} />
-
-            {/* Charts */}
-            <Route path="/line-chart" element={<LineChart />} />
-            <Route path="/bar-chart" element={<BarChart />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Route>
-
-          {/* Auth Layout */}
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-
-          {/* Fallback Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
-    </>
+        )}
+      </Routes>
+    </Router>
   );
 }

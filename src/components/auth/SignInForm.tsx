@@ -12,6 +12,7 @@ import useForm from "../../hooks/useForm";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router";
 import { md5 } from "js-md5";
+import useToken from "../../hooks/useToken";
 
 const schema = object({
   password: string().required('Contraseña requerida'),
@@ -21,6 +22,7 @@ const schema = object({
 
 
 export default function SignInForm() {
+  const { setToken } = useToken();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -48,6 +50,7 @@ export default function SignInForm() {
     console.log(response)  
 
     if (response.success === true){
+      setToken(response.acces_token);
       navigate("/home");
       Swal.fire({
         icon: "success",
