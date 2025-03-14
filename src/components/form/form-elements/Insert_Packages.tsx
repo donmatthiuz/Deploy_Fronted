@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Modal, Box, Typography, Stepper, Step, StepLabel, Button } from "@mui/material";
+import { SetStateAction, useEffect, useState } from "react";
+import { Modal, Box, Typography, Stepper, Step, StepLabel, Button, Dialog, DialogTitle, DialogContent, TextField, List, ListItem, ListItemButton, ListItemText, ImageListItem } from "@mui/material";
 import ComponentCard from "../../common/ComponentCard";
 import Label from "../Label";
 import Input from "../input/InputField";
@@ -10,17 +10,19 @@ import { object, string, number, boolean } from 'yup';
 import useForm from "../../../hooks/useForm";
 import useApi from "../../../hooks/useApi";
 import source_link from "../../../repositori/source_repo";
+import useToken, { parseJwt } from "../../../hooks/useToken";
+
 
 
 const schema_paquet = object({
   codigo: string().required('El codigo es obligatorio'),
   contenido: string().required('El contenido es obligatoria'),
   peso: number().required('El peso es obligatorio'),
-  tipo: string().required('El tipo es obligatorio'),
+  tipo: string(),
   dpi_envia_d:  string(),
   dpi_recibe_d:  string(),
   monto: number().required('El monto es obligatorio'),
-  metodo_de_pago: string().required('El metodo de pago es obligatorio'),
+  metodo_pago: string()
 
 
 
@@ -48,17 +50,29 @@ const steps = ["Información Paquete", "Información Cliente", "Método de Pago"
 
 export default function InsertPackagesStepper({ open, handleClose }) {
 
+  const { token } = useToken();
+  const jwt = token ? parseJwt(token) : null;
+  const id_oficina = jwt ? jwt.id_oficina : null;
+
 
   const { values: valuesPaquete, setValue: setValuePaquete, validate: validatePaquete, errors: errorsPaquete } = useForm(schema_paquet, { 
     codigo: '', 
     contenido: '', 
     peso: 0, 
-    tipo: '', 
+    tipo:  '',
     dpi_envia_d: null, 
     dpi_recibe_d: null,
     monto: 0,
-    metodo_de_pago: 0
+    metodo_pago: ''
   });
+
+
+  const handleChangePaquete = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setValuePaquete(name as keyof typeof value, value);
+  }; 
+
+
 
 
   const { values: valuesEnvia, setValue: setValueEnvia, validate: validateEnvia, errors: errorsEnvia } = useForm(schema_envia, { 
@@ -88,7 +102,17 @@ export default function InsertPackagesStepper({ open, handleClose }) {
   }; 
 
 
-
+  const [openImage, setOpenImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
+  
+  const handleOpenImage = (image: SetStateAction<string>) => {
+    setSelectedImage(image);
+    setOpenImage(true);
+  };
+  
+  const handleCloseImage = () => {
+    setOpenImage(false);
+  };
   const [activeStep, setActiveStep] = useState(0);
   const [skipped, setSkipped] = useState(new Set<number>());
   const [message, setMessage] = useState("");
@@ -102,9 +126,45 @@ export default function InsertPackagesStepper({ open, handleClose }) {
   const [isAddingNewClientEnvia, setIsAddingNewClientEnvia] = useState(false);
   const [fileenvia, setFileEnvia] = useState<File | null>(null);
   const [filerecibe, setFileRecibe] = useState<File | null>(null);
+  const {llamadowithoutbody: obtener_usuarios}  = useApi(`${source_link}/getClientes`);
+  const {llamado: insertar_paquete}  = useApi(`${source_link}/insertar_paquete`);
 
+
+
+  const [dpi_recibe, setDPI_recibe] = useState("")
+  const [dpi_envia, setDPI_envia] = useState("")
+
+
+
+  useEffect(()=>{
+    const getUsuarios = async() =>{
+      
+      const response = await obtener_usuarios("GET");
+      
+      setClientes(response.response);
+
+    }
+    getUsuarios();
+  },[])
+
+
+
+  const [open2, setOpen2] = useState(false);
   
+  const [search, setSearch] = useState("");
+
+  const [clientes, setClientes] = useState([]);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+  const [tipe_cliente, setTipeCliente]  = useState("ninguno")
+
+
   const {llamadowithFileAndBody: insertarCliente } = useApi(`${source_link}/insertarCliente`)
+  const filtrarClientes = () => {
+    return clientes.filter((c) =>
+      c.nombre.toLowerCase().includes(search.toLowerCase()) ||
+      c.dpi.includes(search)
+    );
+  };
 
  
   // Opciones para el tipo de paquete
@@ -144,6 +204,9 @@ export default function InsertPackagesStepper({ open, handleClose }) {
   };
 
   const handleReset = async() => {
+
+    let envia, recibe = ""
+
     if (isAddingNewClientEnvia && valuesEnvia.dpi_envia != ''){
       const body = {
         dpi: valuesEnvia.dpi_envia,
@@ -151,6 +214,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
         telefono: valuesEnvia.telefono_envia,
         direccion: valuesEnvia.direccion_envia
       }
+      envia = valuesEnvia.dpi_envia
       const response = await insertarCliente(fileenvia,body,"POST")
     }
 
@@ -161,9 +225,32 @@ export default function InsertPackagesStepper({ open, handleClose }) {
         telefono: valuesRecibe.telefono_recibe,
         direccion: valuesRecibe.direccion_recibe
       }
+      recibe = valuesRecibe.dpi_recibe
       const response = await insertarCliente(filerecibe,body,"POST")
 
     }
+
+    if (dpi_recibe != ""){
+      recibe = dpi_recibe
+    }
+    if (dpi_envia != ""){
+      envia = dpi_envia
+    }
+
+
+    const body_to_send = {
+      codigo: valuesPaquete.codigo,
+      contenido: valuesPaquete.contenido,
+      peso: valuesPaquete.peso,
+      tipo: valuesPaquete.tipo,
+      metodo_pago: valuesPaquete.metodo_pago,
+      monto: valuesPaquete.monto,
+      oficina_id: id_oficina,
+      envia,
+      recibe
+    }
+
+    const respuesta = await insertar_paquete(body_to_send, "POST")
     setActiveStep(0);
     setIsAddingNewClientEnvia(false);
     setIsAddingNewClientRecibe(false);
@@ -171,16 +258,43 @@ export default function InsertPackagesStepper({ open, handleClose }) {
 
   const handleSelectChange = (value: string) => {
     console.log("Selected value:", value);
+    setValuePaquete("tipo",value)
+  };
+
+  const handleSelectChange_metodo = (value: string) => {
+    console.log("Selected value:", value);
+    setValuePaquete("metodo_pago",value)
+  };
+
+
+  const select_Cliente = (cliente_dpi: string) => {
+    if (tipe_cliente === "envia"){
+      setDPI_envia(cliente_dpi)
+    
+    }else if (tipe_cliente === "recibe"){
+      setDPI_recibe(cliente_dpi)
+
+
+    }
+    setOpen2(false)
+  };
+
+
+  const OpenDialog_Select_Client = (mode: string) => {
+    setOpen2(true)
+    setTipeCliente(mode)
   };
 
   const handleAddNewClientRecibe = () => {
     setIsAddingNewClientRecibe(true);
     setSelectedClientRecibe(null);
+    setDPI_recibe("")
   };
 
   const handleAddNewClientEnvia = () => {
     setIsAddingNewClientEnvia(true);
     setSelectedClientEnvia(null);
+    setDPI_envia("")
   };
 
   const renderStepContent = (step: number) => {
@@ -192,20 +306,39 @@ export default function InsertPackagesStepper({ open, handleClose }) {
               {/* Sección de código */}
               <div>
                 <Label htmlFor="codigo">Codigo</Label>
-                <Input type="text" id="codigo" />
+                <Input 
+                  type="text" 
+                  id="codigo"
+
+                  onChange={handleChangePaquete}
+                  name="codigo"
+                  error={!!errorsPaquete.codigo}
+                  value={valuesPaquete.codigo} />
               </div>
 
               {/* Sección de contenido */}
               <div>
                 <Label>Contenido</Label>
-                <TextArea value={message} onChange={(value) => setMessage(value)} rows={3} />
+                <TextArea 
+                  value={valuesPaquete.contenido} 
+                  onChange={(value) => setValuePaquete("contenido",value)}
+                   
+                  
+                  
+                  rows={3} />
               </div>
 
               {/* Sección de Peso y Tipo en la misma fila */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="peso">Peso</Label>
-                  <Input type="number" id="peso" />
+                  <Input 
+                    type="number" 
+                    id="peso"
+                    onChange={handleChangePaquete}
+                    name="peso"
+                    error={!!errorsPaquete.peso}
+                    value={valuesPaquete.peso} />
                 </div>
 
                 <div>
@@ -234,12 +367,15 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                 <Label>Cliente Envia</Label>
                 {!isAddingNewClientEnvia ? (
                   <>
-                    <Select
-                      options={clients}
-                      placeholder="Seleccione un Cliente Envia"
-                      onChange={(value) => setSelectedClientEnvia(value)}
-                      className="dark:bg-dark-900"
-                    />
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="DPI"
+                        value={dpi_envia}
+                        disabled={true}
+                       
+                      />
+                      <Button onClick={() => OpenDialog_Select_Client("envia")}>Buscar Cliente</Button>
+                    </div>
                     <div className="mt-4">
                       <button
                         type="button"
@@ -249,11 +385,67 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                         Agregar Nuevo Cliente Envia
                       </button>
                     </div>
+
+
+
+
+                   
+                    <Dialog open={open2} onClose={() => setOpen2(false)} fullWidth maxWidth="sm" disablePortal>
+                      <DialogTitle>Buscar Cliente</DialogTitle>
+                      <DialogContent>
+                        <TextField
+                          fullWidth
+                          margin="dense"
+                          label="Ingrese DPI o nombre"
+                          variant="outlined"
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                        />
+                        <List>
+                          {filtrarClientes().map((cliente) => (
+                            <ListItem key={cliente.dpi} disablePadding>
+                              <ListItemButton
+                                onClick={() => {
+                                  setClienteSeleccionado(cliente);
+                                  select_Cliente(cliente.dpi)
+                                  setOpen2(false);
+                                }}
+                              >
+                                <ListItemText primary={`${cliente.nombre} - ${cliente.dpi}`} />
+                                <ImageListItem sx={{ width: 100, height: 100 }}>
+                                  <img
+                                    src={`data:image/jpeg;base64,${cliente.imagen_dpi}`}
+                                    alt="Descripción de la imagen"
+                                    loading="lazy"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Evita que se active el ListItemButton
+                                      handleOpenImage(cliente.imagen_dpi);
+                                    }}
+                                  />
+                                </ImageListItem>
+
+
+                              </ListItemButton>
+                            </ListItem>
+                          ))}
+                        </List>
+                      </DialogContent>
+                    </Dialog>
+                    <Dialog open={openImage} onClose={handleCloseImage} maxWidth="md" disablePortal>
+                      <DialogContent>
+                        <img
+                          src={`data:image/jpeg;base64,${selectedImage}`}
+                          alt="Imagen ampliada"
+                          style={{ width: '300px', height: 'auto', borderRadius: '8px' }}
+                        />
+                      </DialogContent>
+                    </Dialog>
                   </>
                 ) : (
                   <div className="mt-4 space-y-6">
                     <h3 className="text-xl font-semibold">Agregar Nuevo Cliente Envia</h3>
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-2 gap-7">
                       <div>
                         <Label htmlFor="dpi">DPI</Label>
                         <Input
@@ -325,12 +517,17 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                 <Label>Cliente Recibe</Label>
                 {!isAddingNewClientRecibe ? (
                   <>
-                    <Select
-                      options={clients}
-                      placeholder="Seleccione un Cliente Recibe"
-                      onChange={(value) => setSelectedClientRecibe(value)}
-                      className="dark:bg-dark-900"
-                    />
+                  
+                  <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="DPI"
+                        value={dpi_recibe}
+                        disabled={true}
+                       
+                      />
+                      <Button onClick={() => OpenDialog_Select_Client("recibe")}>Buscar Cliente</Button>
+                    </div>
+
                     <div className="mt-4">
                       <button
                         type="button"
@@ -424,8 +621,12 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                 <Input
                   type="number"
                   id="monto"
-                  value={newClientAddress}
-                  onChange={(e) => setNewClientAddress(e.target.value)}
+                  
+                  onChange={handleChangePaquete}
+                  name="monto"
+                  error={!!errorsPaquete.monto}
+                  value={valuesPaquete.monto}
+
                   placeholder="Monto Pagado"
                 />
                 <br/>
@@ -437,7 +638,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                           { value: "Pagar en USA", label: "Pagar en USA" },
                           { value: "Deposito", label: "Deposito" }]}
                 placeholder="Seleccione el Método de Pago"
-                onChange={handleSelectChange}
+                onChange={handleSelectChange_metodo}
                 className="dark:bg-dark-900"
               />
             </div>
