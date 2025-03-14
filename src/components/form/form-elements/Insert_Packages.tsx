@@ -6,10 +6,89 @@ import Input from "../input/InputField";
 import Select from "../Select";
 import TextArea from "../input/TextArea";
 import { UploadImage } from "../../UploadImage/UploadImage";
+import { object, string, number, boolean } from 'yup';
+import useForm from "../../../hooks/useForm";
+import useApi from "../../../hooks/useApi";
+import source_link from "../../../repositori/source_repo";
+
+
+const schema_paquet = object({
+  codigo: string().required('El codigo es obligatorio'),
+  contenido: string().required('El contenido es obligatoria'),
+  peso: number().required('El peso es obligatorio'),
+  tipo: string().required('El tipo es obligatorio'),
+  dpi_envia_d:  string(),
+  dpi_recibe_d:  string(),
+  monto: number().required('El monto es obligatorio'),
+  metodo_de_pago: string().required('El metodo de pago es obligatorio'),
+
+
+
+})
+
+const schema_envia = object({
+ 
+  dpi_envia: string(),
+  nombre_envia: string(),
+  telefono_envia: string(),
+  direccion_envia: string(),
+
+
+})
+
+
+const schema_recibe = object({
+  dpi_recibe: string().required('Dpi es requerido'),
+  nombre_recibe: string().required('Nombre requerido'),
+  telefono_recibe: string().required('Telefono requerido'),
+  direccion_recibe: string().required('Direccion requerido'),
+})
 
 const steps = ["Información Paquete", "Información Cliente", "Método de Pago"];
 
 export default function InsertPackagesStepper({ open, handleClose }) {
+
+
+  const { values: valuesPaquete, setValue: setValuePaquete, validate: validatePaquete, errors: errorsPaquete } = useForm(schema_paquet, { 
+    codigo: '', 
+    contenido: '', 
+    peso: 0, 
+    tipo: '', 
+    dpi_envia_d: null, 
+    dpi_recibe_d: null,
+    monto: 0,
+    metodo_de_pago: 0
+  });
+
+
+  const { values: valuesEnvia, setValue: setValueEnvia, validate: validateEnvia, errors: errorsEnvia } = useForm(schema_envia, { 
+    dpi_envia: '', 
+    nombre_envia: '', 
+    telefono_envia: '', 
+    direccion_envia: '' 
+  });
+
+
+  const handleChangeEnvia = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setValueEnvia(name as keyof typeof value, value); // Usa type assertion
+  }; 
+
+
+  const { values: valuesRecibe, setValue: setValueRecibe, validate: validateRecibe, errors: errorsRecibe } = useForm(schema_recibe, { 
+    dpi_recibe: '', 
+    nombre_recibe: '', 
+    telefono_recibe: '', 
+    direccion_recibe: '' 
+  });
+
+  const handleChangeRecibe = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setValueRecibe(name as keyof typeof value, value); 
+  }; 
+
+
+
   const [activeStep, setActiveStep] = useState(0);
   const [skipped, setSkipped] = useState(new Set<number>());
   const [message, setMessage] = useState("");
@@ -21,9 +100,13 @@ export default function InsertPackagesStepper({ open, handleClose }) {
   const [selectedClientEnvia, setSelectedClientEnvia] = useState<string | null>(null);
   const [isAddingNewClientRecibe, setIsAddingNewClientRecibe] = useState(false);
   const [isAddingNewClientEnvia, setIsAddingNewClientEnvia] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [fileenvia, setFileEnvia] = useState<File | null>(null);
+  const [filerecibe, setFileRecibe] = useState<File | null>(null);
 
+  
+  const {llamadowithFileAndBody: insertarCliente } = useApi(`${source_link}/insertarCliente`)
 
+ 
   // Opciones para el tipo de paquete
   const options = [
     { value: "Frio", label: "Frio" },
@@ -42,6 +125,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
     { value: "cliente3", label: "377656060101" },
   ];
 
+
   const isStepSkipped = (step: number) => skipped.has(step);
 
   const handleNext = () => {
@@ -59,8 +143,30 @@ export default function InsertPackagesStepper({ open, handleClose }) {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
-  const handleReset = () => {
+  const handleReset = async() => {
+    if (isAddingNewClientEnvia && valuesEnvia.dpi_envia != ''){
+      const body = {
+        dpi: valuesEnvia.dpi_envia,
+        nombre: valuesEnvia.nombre_envia,
+        telefono: valuesEnvia.telefono_envia,
+        direccion: valuesEnvia.direccion_envia
+      }
+      const response = await insertarCliente(fileenvia,body,"POST")
+    }
+
+    if(isAddingNewClientRecibe && valuesRecibe.dpi_recibe != ''){
+      const body = {
+        dpi: valuesRecibe.dpi_recibe,
+        nombre: valuesRecibe.nombre_recibe,
+        telefono: valuesRecibe.telefono_recibe,
+        direccion: valuesRecibe.direccion_recibe
+      }
+      const response = await insertarCliente(filerecibe,body,"POST")
+
+    }
     setActiveStep(0);
+    setIsAddingNewClientEnvia(false);
+    setIsAddingNewClientRecibe(false);
   };
 
   const handleSelectChange = (value: string) => {
@@ -121,78 +227,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
           <ComponentCard title="Información Cliente">
             <div className="space-y-6">
               {/* Sección de Cliente Recibe */}
-              <div>
-                <Label>Cliente Recibe</Label>
-                {!isAddingNewClientRecibe ? (
-                  <>
-                    <Select
-                      options={clients}
-                      placeholder="Seleccione un Cliente Recibe"
-                      onChange={(value) => setSelectedClientRecibe(value)}
-                      className="dark:bg-dark-900"
-                    />
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        className="text-blue-500 underline"
-                        onClick={handleAddNewClientRecibe}
-                      >
-                        Agregar Nuevo Cliente Recibe
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="mt-4 space-y-6">
-                    <h3 className="text-xl font-semibold">Agregar Nuevo Cliente Recibe</h3>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <Label htmlFor="dpi">DPI</Label>
-                        <Input
-                          type="text"
-                          id="dpi"
-                          value={newClientDpi}
-                          onChange={(e) => setNewClientDpi(e.target.value)}
-                          placeholder="DPI del Cliente Recibe"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="name">Nombre</Label>
-                        <Input
-                          type="text"
-                          id="name"
-                          value={newClientName}
-                          onChange={(e) => setNewClientName(e.target.value)}
-                          placeholder="Nombre del Cliente Recibe"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="phone">Teléfono</Label>
-                        <Input
-                          type="text"
-                          id="phone"
-                          value={newClientPhone}
-                          onChange={(e) => setNewClientPhone(e.target.value)}
-                          placeholder="Teléfono del Cliente Recibe"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="address">Dirección</Label>
-                        <Input
-                          type="text"
-                          id="address"
-                          value={newClientAddress}
-                          onChange={(e) => setNewClientAddress(e.target.value)}
-                          placeholder="Dirección del Cliente Recibe"
-                        />
-                      </div>
-                      <div>
-                      <Label htmlFor="address">Subir Foto DPI</Label>
-                      <UploadImage file={file} setFile={setFile} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              
 
               {/* Sección de Cliente Envia */}
               <div>
@@ -224,8 +259,12 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                         <Input
                           type="text"
                           id="dpi"
-                          value={newClientDpi}
-                          onChange={(e) => setNewClientDpi(e.target.value)}
+                          
+                          onChange={handleChangeEnvia}
+                          name="dpi_envia"
+                          error={!!errorsEnvia.dpi_envia}
+                          value={valuesEnvia.dpi_envia}
+
                           placeholder="DPI del Cliente Envia"
                         />
                       </div>
@@ -234,8 +273,12 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                         <Input
                           type="text"
                           id="name"
-                          value={newClientName}
-                          onChange={(e) => setNewClientName(e.target.value)}
+                          onChange={handleChangeEnvia}
+                          name="nombre_envia"
+                          error={!!errorsEnvia.nombre_envia}
+                          value={valuesEnvia.nombre_envia}
+
+
                           placeholder="Nombre del Cliente Envia"
                         />
                         
@@ -245,8 +288,13 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                         <Input
                           type="text"
                           id="phone"
-                          value={newClientPhone}
-                          onChange={(e) => setNewClientPhone(e.target.value)}
+                          
+                          onChange={handleChangeEnvia}
+                          name="telefono_envia"
+                          error={!!errorsEnvia.telefono_envia}
+                          value={valuesEnvia.telefono_envia}
+
+
                           placeholder="Teléfono del Cliente Envia"
                         />
                       </div>
@@ -255,14 +303,108 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                         <Input
                           type="text"
                           id="address"
-                          value={newClientAddress}
-                          onChange={(e) => setNewClientAddress(e.target.value)}
+
+                          onChange={handleChangeEnvia}
+                          name="direccion_envia"
+                          error={!!errorsEnvia.direccion_envia}
+                          value={valuesEnvia.direccion_envia}
+
+
                           placeholder="Dirección del Cliente Envia"
                         />
                       </div>
                       <div>
                       <Label htmlFor="address">Subir Foto DPI</Label>
-                      <UploadImage file={file} setFile={setFile} />
+                      <UploadImage file={fileenvia} setFile={setFileEnvia} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label>Cliente Recibe</Label>
+                {!isAddingNewClientRecibe ? (
+                  <>
+                    <Select
+                      options={clients}
+                      placeholder="Seleccione un Cliente Recibe"
+                      onChange={(value) => setSelectedClientRecibe(value)}
+                      className="dark:bg-dark-900"
+                    />
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        className="text-blue-500 underline"
+                        onClick={handleAddNewClientRecibe}
+                      >
+                        Agregar Nuevo Cliente Recibe
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-4 space-y-6">
+                    <h3 className="text-xl font-semibold">Agregar Nuevo Cliente Recibe</h3>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="dpi">DPI</Label>
+                        <Input
+                          type="text"
+                          id="dpi"
+                          
+                          onChange={handleChangeRecibe}
+                          name="dpi_recibe"
+                          error={!!errorsRecibe.dpi_recibe}
+                          value={valuesRecibe.dpi_recibe}
+
+                          placeholder="DPI del Cliente Recibe"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="name">Nombre</Label>
+                        <Input
+                          type="text"
+                          id="name"
+
+                          onChange={handleChangeRecibe}
+                          name="nombre_recibe"
+                          error={!!errorsRecibe.nombre_recibe}
+                          value={valuesRecibe.nombre_recibe}
+
+                          placeholder="Nombre del Cliente Recibe"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="phone">Teléfono</Label>
+                        <Input
+                          type="text"
+                          id="phone"
+
+                          onChange={handleChangeRecibe}
+                          name="telefono_recibe"
+                          error={!!errorsRecibe.telefono_recibe}
+                          value={valuesRecibe.telefono_recibe}
+
+                          placeholder="Teléfono del Cliente Recibe"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="address">Dirección</Label>
+                        <Input
+                          type="text"
+                          id="address"
+                          
+                          onChange={handleChangeRecibe}
+                          name="direccion_recibe"
+                          error={!!errorsRecibe.direccion_recibe}
+                          value={valuesRecibe.direccion_recibe}
+
+
+                          placeholder="Dirección del Cliente Recibe"
+                        />
+                      </div>
+                      <div>
+                      <Label htmlFor="address">Subir Foto DPI</Label>
+                      <UploadImage file={filerecibe} setFile={setFileRecibe} />
                       </div>
                     </div>
                   </div>
@@ -330,10 +472,10 @@ export default function InsertPackagesStepper({ open, handleClose }) {
         </Stepper>
         {activeStep === steps.length ? (
           <>
-            <Typography sx={{ mt: 2, mb: 1 }}>Se ha enviado el paquete exitosamente</Typography>
+            <Typography sx={{ mt: 2, mb: 1 }}>Ha completado los datos del paquete</Typography>
             <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
               <Box sx={{ flex: "1 1 auto" }} />
-              <Button onClick={handleReset}>Nuevo Paquete</Button>
+              <Button onClick={handleReset}>Enviar Informacion</Button>
             </Box>
           </>
         ) : (
@@ -345,7 +487,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
               </Button>
               <Box sx={{ flex: "1 1 auto" }} />
               <Button onClick={handleNext}>
-                {activeStep === steps.length - 1 ? "Finalizar" : "Siguiente"}
+                {"Siguiente"}
               </Button>
             </Box>
           </>
