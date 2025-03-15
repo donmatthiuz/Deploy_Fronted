@@ -1,4 +1,4 @@
-import { SetStateAction, useEffect, useState } from "react";
+import { SetStateAction, useEffect, useRef, useState } from "react";
 import { Modal, Box, Typography, Stepper, Step, StepLabel, Button, Dialog, DialogTitle, DialogContent, TextField, List, ListItem, ListItemButton, ListItemText, ImageListItem } from "@mui/material";
 import ComponentCard from "../../common/ComponentCard";
 import Label from "../Label";
@@ -12,6 +12,38 @@ import useApi from "../../../hooks/useApi";
 import source_link from "../../../repositori/source_repo";
 import useToken, { parseJwt } from "../../../hooks/useToken";
 import Swal from "sweetalert2";
+import { useReactToPrint } from "react-to-print";
+import Bauncher from "../../Bauncher/Bauncher";
+
+
+const printStyles = `
+  @media print {
+    .bauncher-print {
+      page-break-inside: avoid;
+      page-break-after: auto;
+      page-break-before: auto;
+      max-height: fit-content;
+      max-width: fit-content;
+    }
+
+    .total {
+      display: none;
+    }
+  }
+
+  .bauncher-print {
+    height: fit-content;
+    width: fit-content;
+    display: none;
+  }
+
+  @media print {
+    html, body {
+      height: initial !important;
+      overflow: initial !important;
+    }
+  }
+`;
 
 
 
@@ -50,6 +82,20 @@ const schema_recibe = object({
 const steps = ["Información Paquete", "Información Cliente", "Método de Pago"];
 
 export default function InsertPackagesStepper({ open, handleClose }) {
+  const componentRef = useRef<HTMLDivElement | null>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: "Bauncher_Print",
+    onAfterPrint: () => console.log("Impresión completada"),
+  });
+
+
+  const print_bauncher = async()=>{
+
+    await handlePrint();
+
+  }
 
   const { token } = useToken();
   const jwt = token ? parseJwt(token) : null;
@@ -314,6 +360,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
       case 0:
         return (
           <ComponentCard title="Información Paquete">
+
             <div className="space-y-6">
               {/* Sección de código */}
               <div>
@@ -664,8 +711,13 @@ export default function InsertPackagesStepper({ open, handleClose }) {
   };
 
   return (
-    
+    <>
+    <style>{printStyles}</style>
       <Box sx={{ width: 1000, padding: 3 }}>
+        <div className="bauncher-print"  >
+          <Bauncher  ref={componentRef}     />
+        </div>
+        <Button onClick={print_bauncher}>pRESIONAR</Button>
         <Typography id="modal-modal-title" variant="h5" component="h2" mb={2}>
           Agregar Paquete
         </Typography>
@@ -706,6 +758,6 @@ export default function InsertPackagesStepper({ open, handleClose }) {
           </>
         )}
       </Box>
-    
+      </>
   );
 }
