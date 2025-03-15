@@ -11,6 +11,7 @@ import useForm from "../../../hooks/useForm";
 import useApi from "../../../hooks/useApi";
 import source_link from "../../../repositori/source_repo";
 import useToken, { parseJwt } from "../../../hooks/useToken";
+import Swal from "sweetalert2";
 
 
 
@@ -251,9 +252,20 @@ export default function InsertPackagesStepper({ open, handleClose }) {
     }
 
     const respuesta = await insertar_paquete(body_to_send, "POST")
-    setActiveStep(0);
-    setIsAddingNewClientEnvia(false);
-    setIsAddingNewClientRecibe(false);
+
+    if (respuesta.success){
+      setActiveStep(0);
+      setIsAddingNewClientEnvia(false);
+      setIsAddingNewClientRecibe(false);
+    }else{
+      handleClose(false);
+     Swal.fire({
+             icon: "error",
+             title: "Error al insertar",
+             text:respuesta.message,
+           });
+    }
+    
   };
 
   const handleSelectChange = (value: string) => {
@@ -358,7 +370,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
       case 1:
         return (
           <ComponentCard title="Información Cliente">
-            <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-6">
               {/* Sección de Cliente Recibe */}
               
 
@@ -653,7 +665,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
 
   return (
     
-      <Box sx={{ width: 600, padding: 3 }}>
+      <Box sx={{ width: 1000, padding: 3 }}>
         <Typography id="modal-modal-title" variant="h5" component="h2" mb={2}>
           Agregar Paquete
         </Typography>

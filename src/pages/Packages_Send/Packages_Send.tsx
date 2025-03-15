@@ -5,43 +5,67 @@ import PageMeta from "../../components/common/PageMeta";
 import BasicTableOne from "../../components/tables/BasicTables/BasicTableOne";
 import Button from "../../components/ui/button/Button";
 import { Modal } from "../../components/ui/modal";
-import FileInputExample from "../../components/form/form-elements/FileInputExample";
-import DefaultInputs from "../../components/form/form-elements/DefaultInputs";
 import Insert_Packages from "../../components/form/form-elements/Insert_Packages";
 import PAGE_NAME from "../../pronto";
 
+// Función para calcular el rango de fechas de la semana (jueves a miércoles)
+const getWeekRange = () => {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
+  
+  // Calcular el jueves más cercano (inicio de la semana)
+  const startDate = new Date(today);
+  startDate.setDate(today.getDate() - ((dayOfWeek + 3) % 7));
+
+  // Calcular el miércoles siguiente (fin de la semana)
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 6);
+
+  // Formatear las fechas
+  const formatDate = (date) => date.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
+
+  const formatISODate = (date) => date.toISOString().split('T')[0];
+
+  const fecha_inicio = formatISODate(startDate);
+  const fecha_fin = formatISODate(endDate);
+
+  return {
+    range: `${formatDate(startDate)} - ${formatDate(endDate)}`,
+    fecha_inicio,
+    fecha_fin
+  };
+};
+
 export default function Packages_Send() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Función para abrir el modal
   const openModal = () => setIsModalOpen(true);
-  const [open, setOpen] = useState(false);
-
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-  // Función para cerrar el modal
   const closeModal = () => setIsModalOpen(false);
+
+  const { range, fecha_inicio, fecha_fin } = getWeekRange();
 
   return (
     <>
       <PageMeta
-        title ={`${PAGE_NAME} - Paquetes`}
-        description="This is React.js Basic Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title={`${PAGE_NAME} - Paquetes`}
+        description="Esta es la página de tablas básicas para el Dashboard de TailAdmin en React.js y Tailwind CSS"
       />
       <PageBreadcrumb pageTitle="Paquetes de Guatemala" />
 
-
-      
       <div className="space-y-6">
-          <ComponentCard title="Semana 2 de Marzo del 2025">
+        <ComponentCard title={`Semana: ${range}`}>
           <Modal isOpen={isModalOpen} onClose={closeModal} showCloseButton={true}>
-           <div>
-            <Insert_Packages open={undefined} handleClose={undefined} />
-           </div>
+            <div>
+              <Insert_Packages open={undefined} handleClose={closeModal} />
+            </div>
           </Modal>
 
           <Button onClick={openModal}>Ingresar un Nuevo Paquete</Button>
-          <BasicTableOne />
+          <BasicTableOne 
+            fecha_inicio={fecha_inicio} fecha_fin={fecha_fin}/>
         </ComponentCard>
       </div>
     </>

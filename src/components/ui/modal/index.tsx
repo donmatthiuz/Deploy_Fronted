@@ -51,7 +51,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   const contentClasses = isFullscreen
     ? "w-full h-full"
-    : "relative w-[600px] max-w-full rounded-3xl bg-white dark:bg-gray-900"; // Establecer el ancho máximo a 500px
+    : "relative w-[65rem] max-w-full rounded-3xl bg-white dark:bg-gray-900"; // Establecer el ancho máximo a 500px
 
   return (
     <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
