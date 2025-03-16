@@ -14,7 +14,7 @@ import useToken, { parseJwt } from "../../../hooks/useToken";
 import Swal from "sweetalert2";
 import { useReactToPrint } from "react-to-print";
 import Bauncher from "../../Bauncher/Bauncher";
-
+import Bauncher2 from "../../Bauncher2/Bauncher2";
 
 const printStyles = `
   @media print {
@@ -715,7 +715,8 @@ export default function InsertPackagesStepper({ open, handleClose }) {
     <style>{printStyles}</style>
       <Box sx={{ width: 1000, padding: 3 }}>
         <div className="bauncher-print"  >
-          <Bauncher  ref={componentRef}     />
+          {/* <Bauncher  ref={componentRef}     /> */}
+          <Bauncher2 ref={componentRef}/>
         </div>
         <Button onClick={print_bauncher}>pRESIONAR</Button>
         <Typography id="modal-modal-title" variant="h5" component="h2" mb={2}>

@@ -1,0 +1,57 @@
+@media print {
+  .head {
+    background-color: #f59f89 !important; 
+    -webkit-print-color-adjust: exact; 
+    color-adjust: exact; 
+  }
+}
+
+.recuadro2{
+  position: absolute;
+  width: 400px;
+  top: 0;
+  margin-top: 30px;
+  margin-left: 10px;
+
+}
+
+.codigo_bag{
+  border: 1px solid #f59f89;
+  margin: 20px;
+  padding-left: 10px;
+
+}
+
+.marca-agua {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 100px;
+  font-weight: bold;
+  color: rgba(65, 26, 0, 0.1); /* Transparencia */
+  white-space: nowrap;
+  pointer-events: none; /* Para que no afecte la interacción */
+  user-select: none;
+}
+
+
+.descripcion-label2 {
+  width: 100%;
+  max-width: 300px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+
+.contained2 {
+  display: inline; 
+  text-decoration: underline; 
+  text-decoration-color: #7c4d41; /* Cambia el color del subrayado */
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  flex-grow: 1; 
+  text-align: center; 
+}

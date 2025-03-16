@@ -1,9 +1,23 @@
 @media print {
   .head {
-    background-color: #bdd7ee !important; 
+    background-color: #f59f89 !important; 
     -webkit-print-color-adjust: exact; 
     color-adjust: exact; 
   }
+}
+
+
+.label-name, .label-name-2 {
+  font-weight: bold;
+}
+
+.descripcion-label, .descripcion-label-2 {
+  flex-grow: 1; /* Permite que el contenido se ajuste */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid #f59f89 !important;
+  padding-left: 5px;/* Agrega "..." si el contenido es demasiado largo */
 }
 
 /* Your existing CSS */
@@ -12,9 +26,38 @@
   font-family: Arial, sans-serif;
 }
 
+.contenido_header1 {
+  text-align: center;
+  flex-wrap: wrap; /* Permite que el texto rodee la imagen */
+
+}
+.contenido_header1 img {
+  float: inline-start;
+  width: 80px; /* Ajusta el tamaño de la imagen */
+  margin-right: 10px; /* Espacio entre la imagen y el texto */
+}
+
+
+
+.contenido_header1 h2 {
+  font-size: 20px;
+}
+
+
+
+.contenido_header1 p {
+  text-align: left; /* Mantiene el texto alineado a la izquierda */
+  font-size: 11px;
+}
+
+
+
+
 .bauncher-contenido {
-  border: 2px solid #1f4e78;
+  border: 2px solid #81493b;
   height: fit-content;
+  border-top: none;
+  
   display: flex;
   flex-direction: column;
 }
@@ -23,16 +66,17 @@
   display: grid;
   grid-template-columns: 1fr 20fr;
   height: 25px;
-  align-items: center;
+  margin-bottom: 10px;
+
+
 }
 
 .label2-display {
-  display: grid;
-  grid-template-columns: 1fr 6fr 3fr 1fr 6fr;
-  height: 22px;
+  display: flex;
   align-items: center;
+  gap: 10px; /* Espacio entre elementos */
+  height: 22px;
 }
-
 .label-name {
   grid-column: 1 / span 1;
   font-family: Arial, sans-serif;
@@ -56,7 +100,7 @@
 
 .descripcion-label {
   grid-column: 2;
-  border-bottom: 1px solid #5b9bd5 !important;
+  border-bottom: 1px solid #f59f89 !important;
   display: flex;
   align-items: center;
   padding-left: 5px;
@@ -64,7 +108,7 @@
 
 .descripcion-label-2 {
   grid-column: 5;
-  border-bottom: 1px solid #5b9bd5 !important;
+  border-bottom: 1px solid #f59f89 !important;
   display: flex;
   align-items: center;
   padding-left: 5px;
@@ -72,7 +116,7 @@
 
 .descripcion-label-3{
   grid-column: 2;
-  border-bottom: 1px solid #5b9bd5 !important;
+  border-bottom: 1px solid #f59f89 !important;
   margin: 0;
   height: 20px;
   font-weight: bold;
@@ -80,7 +124,7 @@
 
 .descripcion-label-4{
   grid-column: 4;
-  border-bottom: 1px solid #5b9bd5 !important;
+  border-bottom: 1px solid #f59f89 !important;
   margin: 0;
   height: 20px;
   font-weight: bold;
@@ -112,14 +156,16 @@
 }
 
 .info-table {
-  margin-top: 7px;
+  margin-top: 0px;
 }
 
+
+
 .head {
-  background-color: #bdd7ee;
+  background-color: #f59f89;
   font-family: Arial, sans-serif;
   font-size: 11px;
-  border: 1px solid #2f75b5;
+  border: 1px solid #81493b;
   padding: 0;
 }
 
@@ -127,17 +173,41 @@
 
 .paquete{
   font-family: Arial, sans-serif;
-  font-size: 30px;
-  border: 1px solid #2f75b5; 
+  font-size: 18px;
+  border: 1px solid #9d4d3c;
 }
 
 
+.contenido_2_2{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.contenido_2_2 img {
+  float: left;
+  width: 100px;
+}
+
+.valores{
+  font-family: Arial, sans-serif;
+  font-size: 25px;
+  border: 1px solid #9d4d3c; 
+}
+
+.valores2{
+  font-family: Arial, sans-serif;
+  font-size: 25px;
+
+  border-bottom: none;
+}
 .contenido{
   font-family: Arial, sans-serif;
   font-size: 18px;
   height: max-content;
   display: flex;
-  border: 1px solid #2f75b5; 
+  border: 1px solid #81493b;
 }
 
 .info-table {
@@ -158,7 +228,7 @@
 }
 
 .ctd{
-  border: 1px solid #2f75b5; 
+  border: 1px solid #9d4d3c; 
 }
 .peso-cantidad{
   font-family: Arial, sans-serif;
@@ -189,7 +259,8 @@
   position: absolute;
   width: 750px;
   top: 0;
-  margin-top: 10px;
+  margin-top: 15px;
+  margin-left: 10px;
 }
 
 
