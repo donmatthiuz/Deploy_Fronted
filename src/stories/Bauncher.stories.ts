@@ -19,6 +19,7 @@ export const Default: Story = {
       direccion_envia: "Av. Insurgentes 456",
       ciudad_envia: "CDMX",
       identif_envia: '3620515420101',
+      telefono_envia: "555-6789",
       recibe: "María González",
       direccion_recibe: "Calle Reforma 789",
       ciudad_recibe: "Guadalajara",

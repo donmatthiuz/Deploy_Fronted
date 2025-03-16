@@ -82,24 +82,75 @@ const schema_recibe = object({
 const steps = ["Información Paquete", "Información Cliente", "Método de Pago"];
 
 export default function InsertPackagesStepper({ open, handleClose }) {
+
+
+  const [info, setInfo] = useState({
+    envia: "",
+    direccion_envia: "",
+    ciudad_envia: "",
+    identif_envia: "",
+    telefono_envia: "",
+    recibe: "",
+    direccion_recibe: "",
+    ciudad_recibe: "",
+    region: "",
+    codigo_postal: "",
+    telefono_recibe: "",
+    identif_recibe: "",
+    descripcion: [],
+    contenido: "",
+    codigo: "",
+    atendido: "",
+    oficina: "",
+    monto: 0,
+    tipo: ""
+  });
+
+  const handleChange_Info = (key, value) => {
+    setInfo(prev => ({
+      ...prev,
+      [key]: value, // Actualiza dinámicamente la propiedad con el nuevo valor
+    }));
+  };
+
+  
+
+  const component2Ref = useRef<HTMLDivElement | null>(null);
+
+  const handlePrint_sticker = useReactToPrint({
+    contentRef: component2Ref,
+    documentTitle: "Stiker_Print",
+    onAfterPrint: () => console.log("Impresión completada"),
+  });
+
   const componentRef = useRef<HTMLDivElement | null>(null);
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
     documentTitle: "Bauncher_Print",
-    onAfterPrint: () => console.log("Impresión completada"),
+    onAfterPrint: () => {
+      console.log("Primera impresión completada, iniciando segunda...");
+      handlePrint_sticker(); // Lanza la segunda impresión solo cuando la primera termina
+    },
   });
 
-
-  const print_bauncher = async()=>{
-
+  const handlePrintTwice = async () => {
+   
     await handlePrint();
-
-  }
+    setTimeout(async () => {
+      await handlePrint_sticker();
+    }, 1000);
+  };
+  const print_bauncher = () => {
+    handlePrint(); // Lanza la primera impresión; la segunda se ejecuta después automáticamente
+  };
+  
 
   const { token } = useToken();
   const jwt = token ? parseJwt(token) : null;
   const id_oficina = jwt ? jwt.id_oficina : null;
+  const oficina = jwt ? jwt.oficina : null;
+  const usuario = jwt ? jwt.usuario : null;
 
 
   const { values: valuesPaquete, setValue: setValuePaquete, validate: validatePaquete, errors: errorsPaquete } = useForm(schema_paquet, { 
@@ -175,6 +226,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
   const [filerecibe, setFileRecibe] = useState<File | null>(null);
   const {llamadowithoutbody: obtener_usuarios}  = useApi(`${source_link}/getClientes`);
   const {llamado: insertar_paquete}  = useApi(`${source_link}/insertar_paquete`);
+  const {llamado: clientes_info} = useApi(`${source_link}/getClientePorDpi`);
 
 
 
@@ -193,6 +245,13 @@ export default function InsertPackagesStepper({ open, handleClose }) {
     }
     getUsuarios();
   },[])
+  const [readyToPrint, setReadyToPrint] = useState(false);
+  useEffect(() => {
+    if (readyToPrint) {
+      handlePrintTwice();
+      setReadyToPrint(false); // Reiniciar estado después de imprimir
+    }
+  }, [readyToPrint]);
 
 
 
@@ -263,6 +322,10 @@ export default function InsertPackagesStepper({ open, handleClose }) {
       }
       envia = valuesEnvia.dpi_envia
       const response = await insertarCliente(fileenvia,body,"POST")
+
+      handleChange_Info("direccion_envia", valuesEnvia.direccion_envia)
+      handleChange_Info("envia", valuesEnvia.nombre_envia)
+      handleChange_Info("telefono_envia", valuesEnvia.telefono_envia)
     }
 
     if(isAddingNewClientRecibe && valuesRecibe.dpi_recibe != ''){
@@ -275,13 +338,33 @@ export default function InsertPackagesStepper({ open, handleClose }) {
       recibe = valuesRecibe.dpi_recibe
       const response = await insertarCliente(filerecibe,body,"POST")
 
+      handleChange_Info("direccion_recibe", valuesRecibe.direccion_recibe)
+      handleChange_Info("recibe", valuesRecibe.nombre_recibe)
+      handleChange_Info("telefono_recibe", valuesRecibe.telefono_recibe)
+
     }
 
     if (dpi_recibe != ""){
       recibe = dpi_recibe
+      const body_recibe = {
+        dpi: dpi_recibe
+      }
+      const recibe_ = await clientes_info(body_recibe,"POST")
+      console.log(recibe_) 
+      handleChange_Info("direccion_recibe", recibe_.response.direccion)
+      handleChange_Info("recibe", recibe_.response.nombre)
+      handleChange_Info("telefono_recibe", recibe_.response.telefono)
     }
     if (dpi_envia != ""){
       envia = dpi_envia
+      const body_envia = {
+        dpi: dpi_envia
+      }
+      const envia_ = await clientes_info(body_envia,"POST") 
+      console.log(envia_) 
+      handleChange_Info("direccion_envia", envia_.response.direccion)
+      handleChange_Info("envia", envia_.response.nombre)
+      handleChange_Info("telefono_envia", envia_.response.telefono)
     }
 
 
@@ -299,7 +382,23 @@ export default function InsertPackagesStepper({ open, handleClose }) {
 
     const respuesta = await insertar_paquete(body_to_send, "POST")
 
+
+    handleChange_Info("codigo", valuesPaquete.codigo)
+    handleChange_Info("contenido", valuesPaquete.contenido)
+    handleChange_Info("descripcion", [valuesPaquete.tipo])
+    handleChange_Info("oficina", oficina)
+    handleChange_Info("atendido", usuario)
+    handleChange_Info("monto", valuesPaquete.monto)
+
+    handleChange_Info("identif_envia", envia)
+    handleChange_Info("identif_recibe", recibe)
+    handleChange_Info("tipo", valuesPaquete.tipo.toUpperCase())
+
     if (respuesta.success){
+      
+      setTimeout(() => {
+        setReadyToPrint(true);
+      }, 0);
       setActiveStep(0);
       setIsAddingNewClientEnvia(false);
       setIsAddingNewClientRecibe(false);
@@ -715,9 +814,10 @@ export default function InsertPackagesStepper({ open, handleClose }) {
     <style>{printStyles}</style>
       <Box sx={{ width: 1000, padding: 3 }}>
         <div className="bauncher-print"  >
-          {/* <Bauncher  ref={componentRef}     /> */}
-          <Bauncher2 ref={componentRef}/>
+          <Bauncher  info={info} ref={componentRef}     />
+          <Bauncher2 ref={component2Ref} info={info}/>  
         </div>
+        
         <Button onClick={print_bauncher}>pRESIONAR</Button>
         <Typography id="modal-modal-title" variant="h5" component="h2" mb={2}>
           Agregar Paquete
