@@ -80,12 +80,12 @@ export default function BasicTableMulti({ tableData, setTableData, addBulto }: B
   );
 }
 
-export function BultosTable({ bultos }: { bultos: { id: number; numeroBulto: number; items: Item[] }[] }) {
+export function BultosTable({ bultos }: { bultos: { id: number; numeroBulto: number; codigo: string; descripcion: string; peso: number; tipo: string }[] }) {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] mt-6">
       <div className="p-4 bg-gray-100 dark:bg-gray-800 flex justify-between items-center">
         <span className="text-lg font-semibold text-gray-800 dark:text-white">
-          Bultos Agregados
+          Bultos del Manifiesto
         </span>
       </div>
       <div className="max-w-full overflow-x-auto">
@@ -102,15 +102,15 @@ export function BultosTable({ bultos }: { bultos: { id: number; numeroBulto: num
             </TableHeader>
             <TableBody>
               {bultos.map((bulto) => (
-                bulto.items.map((item) => (
-                  <TableRow key={`${bulto.numeroBulto}-${item.id}`}>
+                
+                  <TableRow key={`${bulto.numeroBulto}`}>
                     <TableCell>{bulto.numeroBulto}</TableCell>
-                    <TableCell>{item.codigo}</TableCell>
-                    <TableCell>{item.contenido}</TableCell>
-                    <TableCell>{item.peso}</TableCell>
-                    <TableCell>{item.tipo}</TableCell>
+                    <TableCell>{bulto.codigo}</TableCell>
+                    <TableCell>{bulto.descripcion}</TableCell>
+                    <TableCell>{bulto.peso}</TableCell>
+                    <TableCell>{bulto.tipo}</TableCell>
                   </TableRow>
-                ))
+               
               ))}
             </TableBody>
           </Table>

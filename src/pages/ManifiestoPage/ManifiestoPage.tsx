@@ -21,7 +21,7 @@ export interface Item {
 export default function ManifiestoPage() {
   const [tableData_frios, setTableDataFrios] = useState<Item[]>([]);
   const [tableData_secos, setTableDataSecos] = useState<Item[]>([]);
-  const [bultos, setBultos] = useState<{ id: number; numeroBulto: number; items: Item[] }[]>([]);
+  const [bultos, setBultos] = useState<{ id: number; numeroBulto: number; codigo: string; descripcion: string; peso: number; tipo: string }[]>([]);
   const { llamado: obtener_paquetes_fecha_paquete } = useApi(`${source_link}/obtener_paquetes_fecha_tipo`);
   const [bultoCounter, setBultoCounter] = useState(1);
 
@@ -55,7 +55,13 @@ export default function ManifiestoPage() {
   }, []);
 
   const addBulto = (items: Item[]) => {
-    setBultos([...bultos, { id: bultos.length + 1, numeroBulto: bultoCounter, items }]);
+    if (items.length === 0) return;
+    const codigo = items[0].codigo;
+    const descripcion = items.map(item => item.contenido).join(", ");
+    const peso = items.reduce((sum, item) => parseFloat(sum) + parseFloat(item.peso), 0);
+    const tipo = items[0].tipo;
+
+    setBultos([...bultos, { id: bultos.length + 1, numeroBulto: bultoCounter, codigo, descripcion, peso, tipo }]);
     setBultoCounter(bultoCounter + 1);
   };
 
