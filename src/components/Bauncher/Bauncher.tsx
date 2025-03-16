@@ -1,9 +1,17 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect } from 'react';
 import './Bauncher.css';
+import useApi from '../../hooks/useApi';
+import source_link from '../../repositori/source_repo';
 
-const Bauncher = forwardRef(({ info }, ref) => {
+const Bauncher = forwardRef(({ info,setInfo }, ref) => {
+  
+
+
+  console.log(info)
   const fecha = new Date();
   const fechaFormateada = fecha.toLocaleDateString();
+
+  
   return (
     <div className='recuadro' ref={ref}>
       <div className='bauncher-contenido'>
@@ -175,7 +183,7 @@ const Bauncher = forwardRef(({ info }, ref) => {
         <div className='label2-display'>
           <p className='label-name'>Tel: </p>
           <div className='descripcion-label'>
-            <p className='contained'>{info?.telefono_recibe}</p>
+            <p className='contained'>{info?.telefono_envia}</p>
           </div>
           <p className='label-name-2'>Identificacion: </p>
           <div className='descripcion-label-2'>
