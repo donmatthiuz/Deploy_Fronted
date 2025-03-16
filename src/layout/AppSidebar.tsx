@@ -15,9 +15,12 @@ import {
   TableIcon,
   BoxIcon,
   UserCircleIcon,
+  DocsIcon
+
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
+import useToken, { parseJwt } from "../hooks/useToken";
 
 type NavItem = {
   name: string;
@@ -26,46 +29,7 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const navItems: NavItem[] = [
-  // {
-  //   icon: <GridIcon />,
-  //   name: "Dashboard",
-  //   subItems: [{ name: "Ecommerce", path: "/home", pro: false }],
-  // },
-  {
-    icon: <BoxIcon />,
-    name: "Paquetes",
-    path: "/paquetes",
-  },
-  // {
-  //   icon: <CalenderIcon />,
-  //   name: "Calendar",
-  //   path: "/calendar",
-  // },
-  // {
-  //   icon: <UserCircleIcon />,
-  //   name: "User Profile",
-  //   path: "/profile",
-  // },
-  // {
-  //   name: "Forms",
-  //   icon: <ListIcon />,
-  //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  // },
-  // {
-  //   name: "Tables",
-  //   icon: <TableIcon />,
-  //   subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  // },
-  // {
-  //   name: "Pages",
-  //   icon: <PageIcon />,
-  //   subItems: [
-  //     { name: "Blank Page", path: "/blank", pro: false },
-  //     { name: "404 Error", path: "/error-404", pro: false },
-  //   ],
-  // },
-];
+
 
 const othersItems: NavItem[] = [
   // {
@@ -99,8 +63,57 @@ const othersItems: NavItem[] = [
 ];
 
 const AppSidebar: React.FC = () => {
+  const { token } = useToken();
+  const jwt = token ? parseJwt(token) : null;
+  const rol = jwt ? jwt.rol : null;
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+
+  const navItems: NavItem[] = [
+    // {
+    //   icon: <GridIcon />,
+    //   name: "Dashboard",
+    //   subItems: [{ name: "Ecommerce", path: "/home", pro: false }],
+    // },
+    {
+      icon: <BoxIcon />,
+      name: "Paquetes",
+      path: "/paquetes",
+    },
+    ...(rol === "admin"
+      ? [
+          {
+            icon: <DocsIcon />,
+            name: "Manifiesto",
+            path: "/manifiesto",
+          },
+        ]
+      : []),
+   
+    // {
+    //   icon: <UserCircleIcon />,
+    //   name: "User Profile",
+    //   path: "/profile",
+    // },
+    // {
+    //   name: "Forms",
+    //   icon: <ListIcon />,
+    //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    // },
+    // {
+    //   name: "Tables",
+    //   icon: <TableIcon />,
+    //   subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+    // },
+    // {
+    //   name: "Pages",
+    //   icon: <PageIcon />,
+    //   subItems: [
+    //     { name: "Blank Page", path: "/blank", pro: false },
+    //     { name: "404 Error", path: "/error-404", pro: false },
+    //   ],
+    // },
+  ];
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";

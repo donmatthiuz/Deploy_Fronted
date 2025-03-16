@@ -3,7 +3,7 @@ import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
 // import UserProfiles from "./pages/UserProfiles";
-// import Videos from "./pages/UiElements/Videos";
+import Videos from "./pages/UiElements/Videos";
 // import Images from "./pages/UiElements/Images";
 // import Alerts from "./pages/UiElements/Alerts";
 // import Badges from "./pages/UiElements/Badges";
@@ -17,7 +17,7 @@ import NotFound from "./pages/OtherPage/NotFound";
 // import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
-
+import ManifiestoPage from "./pages/ManifiestoPage/ManifiestoPage";
 // import Home from "./pages/Dashboard/Home";
 import Packages_Send from "./pages/Packages_Send/Packages_Send";
 import { useEffect, useState } from "react";
@@ -72,8 +72,11 @@ export default function App() {
           // Si el token es válido, mostrar el contenido según el rol
           
           <Route element={<AppLayout />}>
-            <Route index path="/" element={rol === "admin" ? <Packages_Send /> : <BasicTables />} />
+            <Route index path="/" element={<Packages_Send />} />
             <Route path="/paquetes" element={<Packages_Send />} />
+            <Route path="/admin" element={<Videos />} />
+
+            <Route path="/manifiesto" element={rol === "admin" ? <ManifiestoPage /> : <NotFound />} />
 
             <Route path="*" element={<Navigate to="/" />} />
           </Route>
