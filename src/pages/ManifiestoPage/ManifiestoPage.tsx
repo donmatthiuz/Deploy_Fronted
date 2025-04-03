@@ -62,6 +62,7 @@ export default function ManifiestoPage() {
       const direnvia = resultado_data.response.envia.direccion.toUpperCase();
       const dirrerecibe = resultado_data.response.recibe.direccion.toUpperCase();
 
+      console.log(bulto.descripcion)
       return {
         "HAWB": bulto.codigo,
         "Origen": "GUA",
