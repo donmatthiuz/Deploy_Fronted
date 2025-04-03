@@ -26,8 +26,11 @@
     "@shadcn/ui": "^0.0.4",
     "@tailwindcss/forms": "^0.5.10",
     "apexcharts": "^4.1.0",
+    "axios": "^1.8.4",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "flatpickr": "^4.6.13",
     "js-md5": "^0.8.3",
     "react": "^18.3.1",
@@ -45,6 +48,8 @@
     "swiper": "^11.2.3",
     "tailwind-merge": "^3.0.1",
     "uninstall": "^0.0.0",
+    "xlsx": "^0.18.5",
+    "xlsx-style": "^0.8.13",
     "yup": "^1.6.1"
   },
   "devDependencies": {
@@ -59,6 +64,7 @@
     "@storybook/react-vite": "8.6.6",
     "@storybook/test": "8.6.6",
     "@tailwindcss/postcss": "^4.0.8",
+    "@types/file-saver": "^2.0.7",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@types/react-flatpickr": "^3.8.11",
