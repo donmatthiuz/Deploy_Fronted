@@ -21,13 +21,14 @@ export interface Item {
   contenido: string;
   peso: number;
   tipo: string;
+  id_real?: number | null;
 }
 
 export default function ManifiestoPage() {
 
   const { llamado: traducir } = useApi(`${source_link}/translate`);
 
-  
+  const { llamado: getPaquetedata } = useApi(`${source_link}/getPaquetedata`);
   
 
   const exportToExcel = async () => {
@@ -45,23 +46,36 @@ export default function ManifiestoPage() {
             targetLang: "en"
       };
 
+      const bodydata = {
+        idPaquete:bulto.id_real
+      }
+      
+
       const resultado = await traducir(body, "POST");
 
+      const resultado_data = await getPaquetedata(bodydata, "POST");
+
+
       const descripcionTraducida = resultado.translatedText.toUpperCase();
+      const nombreenvia = resultado_data.response.envia.nombre.toUpperCase();
+      const nombrerecibe = resultado_data.response.recibe.nombre.toUpperCase();
+      const direnvia = resultado_data.response.envia.direccion.toUpperCase();
+      const dirrerecibe = resultado_data.response.recibe.direccion.toUpperCase();
+
       return {
         "HAWB": bulto.codigo,
         "Origen": "GUA",
         "DESTINO": "JFK",
         "PIEZAS": "1",
         "PESO": (bulto.peso * 0.453592).toFixed(2),
-        "NOMBRE DEL SHIPPER": "",
-        "DIRECCION 1 SHIPPER": "",
+        "NOMBRE DEL SHIPPER": nombreenvia,
+        "DIRECCION 1 SHIPPER": dirrerecibe,
         "CIUDAD SHIPPER": "",
         "ESTADO REGION": "GT",
         "PAIS": "GT",
         "CODIGO POSTAL": "",
-        "NOMBRE DEL CONSIGNATARIO": "",
-        "DIRECCION CONSIGNATARIO": "",
+        "NOMBRE DEL CONSIGNATARIO": nombrerecibe,
+        "DIRECCION CONSIGNATARIO": direnvia,
         "CIUDAD CONSIGN": "",
         "ESTADO": "",
         "PAIS CONSIGN": "USA",
@@ -134,7 +148,7 @@ export default function ManifiestoPage() {
 
   const [tableData_frios, setTableDataFrios] = useState<Item[]>([]);
   const [tableData_secos, setTableDataSecos] = useState<Item[]>([]);
-  const [bultos, setBultos] = useState<{ id: number; numeroBulto: number; codigo: string; descripcion: string; peso: number; tipo: string }[]>([]);
+  const [bultos, setBultos] = useState<{ id: number; numeroBulto: number; codigo: string; descripcion: string; peso: number; tipo: string, id_real: number | null; }[]>([]);
   const { llamado: obtener_paquetes_fecha_paquete } = useApi(`${source_link}/obtener_paquetes_fecha_tipo`);
 
 
@@ -165,6 +179,8 @@ export default function ManifiestoPage() {
       const response2 = await obtener_paquetes_fecha_paquete(body_seco, "POST");
       setTableDataFrios(response.response);
       setTableDataSecos(response2.response);
+
+      console.log(response)
     };
     get_frios();
   }, []);
@@ -172,11 +188,12 @@ export default function ManifiestoPage() {
   const addBulto = (items: Item[], useSameID = false) => {
     if (items.length === 0) return;
     const codigo = items[0].codigo;
+    const id_real = items[0].id; // ✅ Se asigna el id del primer item
     const descripcion = items.map(item => item.contenido).join(", ");
     const peso = items.reduce((sum, item) => parseFloat(sum) + parseFloat(item.peso), 0);
     const tipo = items[0].tipo;
 
-    setBultos([...bultos, { id: bultos.length + 1, numeroBulto: bultoCounter, codigo, descripcion, peso, tipo }]);
+    setBultos([...bultos, { id: bultos.length + 1, numeroBulto: bultoCounter, codigo, descripcion, peso, tipo, id_real }]);
     setBultoCounter(bultoCounter + 1);
     if (!useSameID) {
       setBultoCounter(bultoCounter + 1);
