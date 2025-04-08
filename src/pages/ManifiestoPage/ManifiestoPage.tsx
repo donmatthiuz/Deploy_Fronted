@@ -13,6 +13,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import ExcelJS from 'exceljs';
 import axios from 'axios';
+import Button from "../../components/ui/button/Button";
 
 
 export interface Item {
@@ -91,52 +92,172 @@ export default function ManifiestoPage() {
   
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Bultos');
-    
-  
-    // Define columns (headers)
-    worksheet.columns = [
-      { header: 'HAWB', key: 'HAWB', width: 20 },
-      { header: 'Origen', key: 'Origen', width: 10 },
-      { header: 'Destino', key: 'DESTINO', width: 10 },
-      { header: 'PIEZAS', key: 'PIEZAS', width: 10 },
-      { header: 'PESO', key: 'PESO', width: 10 },
-      { header: 'NOMBRE DEL SHIPPER', key: 'NOMBRE DEL SHIPPER', width: 20 },
-      { header: 'DIRECCION 1 SHIPPER', key: 'DIRECCION 1 SHIPPER', width: 30 },
-      { header: 'CIUDAD SHIPPER', key: 'CIUDAD SHIPPER', width: 20 },
-      { header: 'ESTADO REGION', key: 'ESTADO REGION', width: 15 },
-      { header: 'PAIS', key: 'PAIS', width: 15 },
-      { header: 'CODIGO POSTAL', key: 'CODIGO POSTAL', width: 15 },
-      { header: 'NOMBRE DEL CONSIGNATARIO', key: 'NOMBRE DEL CONSIGNATARIO', width: 20 },
-      { header: 'DIRECCION CONSIGNATARIO', key: 'DIRECCION CONSIGNATARIO', width: 30 },
-      { header: 'CIUDAD CONSIGN', key: 'CIUDAD CONSIGN', width: 20 },
-      { header: 'ESTADO', key: 'ESTADO', width: 15 },
-      { header: 'PAIS CONSIGN', key: 'PAIS CONSIGN', width: 20 },
-      { header: 'CODIGO POSTAL CONSIGN', key: 'CODIGO POSTAL CONSIGN', width: 20 },
-      { header: 'DESCRIPCION DE LA CARGA', key: 'DESCRIPCION DE LA CARGA', width: 60 },
-      { header: 'BAG', key: 'BAG', width: 15 },
-    ];
-  
-    // Add data rows to the worksheet
-    data_bultos.forEach(bulto => {
-      worksheet.addRow(bulto);
-    });
-  
-    // Set styles for headers (applying different colors to each header)
-    const headerColors = [
 
-      "1F4E78","1F4E78", "1F4E78","1F4E78","1F4E78", "2f75b5", "2f75b5","2f75b5","2f75b5","2f75b5","2f75b5", "5b75d5","5b75d5","5b75d5","5b75d5","5b75d5","5b75d5",
-      "1F4E78","1F4E78"
+
+    worksheet.mergeCells('A1:E1');
+
+    worksheet.getCell('A1').value = 'MANIFIESTO DE CARGA   SEGUN GUIA';
+
+    worksheet.getCell('A1').font = { 
+      name: 'Arial', 
+      size: 12 
+    };
+
+    worksheet.getCell('A1').alignment = {
+      horizontal: 'center',
+      vertical: 'middle'   
+    };
+
+
+    // ahora seteamos el valor de NoGUIA
+
+    worksheet.getColumn('F').width = 40; 
+
+    worksheet.getCell('F1').value = '202 - 31115884';
+
+    worksheet.getCell('F1').font = { 
+      name: 'Arial', 
+      size: 12 
+    };
+
+    worksheet.getCell('F1').alignment = {
+      vertical: 'bottom'   
+    };
+
+    //vamos a setear el widtht del resto
+
+    worksheet.getColumn('A').width = 14.15; 
+    worksheet.getColumn('B').width = 14.15; 
+    worksheet.getColumn('C').width = 14.15; 
+    worksheet.getColumn('D').width = 14.15; 
+    worksheet.getColumn('E').width = 14.15; 
+    worksheet.getColumn('G').width = 64; 
+    worksheet.getColumn('H').width = 52; 
+    worksheet.getColumn('I').width = 27; 
+    worksheet.getColumn('J').width = 10; 
+    worksheet.getColumn('K').width = 25; 
+    worksheet.getColumn('L').width = 46; 
+    worksheet.getColumn('M').width = 46; 
+    worksheet.getColumn('N').width = 28; 
+    worksheet.getColumn('O').width = 14.72; 
+    worksheet.getColumn('P').width = 9.57; 
+    worksheet.getColumn('Q').width = 26.14; 
+    worksheet.getColumn('R').width = 110; 
+    worksheet.getColumn('S').width = 10;
+
+
+    //Define columns (headers)
+    const miscolumns = [
+      { header: 'HAWB', key: 'HAWB', color: '1F4E78', cel: 'A' },
+      { header: 'Origen', key: 'Origen', color: '1F4E78', cel: 'B'},
+      { header: 'DESTINO', key: 'DESTINO', color: '1F4E78', cel: 'C'},
+      { header: 'PIEZAS', key: 'PIEZAS', color: '1F4E78', cel: 'D'},
+      { header: 'PESO', key: 'PESO', color: '1F4E78', cel: 'E'},
+      { header: 'NOMBRE DEL SHIPPER', key: 'NOMBRE DEL SHIPPER', color: '2f75b5', cel: 'F'},
+      { header: 'DIRECCION 1 SHIPPER', key: 'DIRECCION 1 SHIPPER', color: '2f75b5', cel: 'G'},
+      { header: 'CIUDAD SHIPPER', key: 'CIUDAD SHIPPER', color: '2f75b5', cel: 'H'},
+      { header: 'ESTADO REGION', key: 'ESTADO REGION', color: '2f75b5', cel: 'I'},
+      { header: 'PAIS', key: 'PAIS' , color: '2f75b5', cel: 'J'},
+      { header: 'CODIGO POSTAL', key: 'CODIGO POSTAL', color: '2f75b5', cel: 'K'},
+      { header: 'NOMBRE DEL CONSIGNATARIO', key: 'NOMBRE DEL CONSIGNATARIO', color: '5b75d5', cel: 'L'},
+      { header: 'DIRECCION CONSIGNATARIO', key: 'DIRECCION CONSIGNATARIO', color: '5b75d5', cel: 'M'},
+      { header: 'CIUDAD CONSIGN', key: 'CIUDAD CONSIGN', color: '5b75d5', cel: 'N'},
+      { header: 'ESTADO', key: 'ESTADO' , color: '5b75d5', cel: 'O'},
+      { header: 'PAIS', key: 'PAIS CONSIGN', color: '5b75d5', cel: 'P'},
+      { header: 'CODIGO POSTAL', key: 'CODIGO POSTAL CONSIGN', color: '5b75d5', cel: 'Q'},
+      { header: 'DESCRIPCION DE LA CARGA', key: 'DESCRIPCION DE LA CARGA', color: '1F4E78', cel: 'R'},
+      { header: 'BAG', key: 'BAG', color: '1F4E78', cel: 'S'},
     ];
-  
-    worksheet.getRow(1).eachCell((cell, colNumber) => {
+
+
+    worksheet.getRow(2).values = miscolumns.map(col => col.header);
+    
+    miscolumns.forEach((col, index) => {
+      const colLetter = String.fromCharCode(65 + index);  // Convertir el índice en letra de columna (A, B, C, etc.)
+      const cell = worksheet.getCell(`${colLetter}2`); // Obtener la celda correspondiente (A2, B2, C2, etc.)
+      cell.value = col.header; // Asignar el valor del header
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: headerColors[colNumber - 1] } // Apply different color to each header
+        fgColor: { argb: col.color } // Establecer el color de fondo
       };
-      cell.font = { bold: false, color: { argb: 'FFFFFF' } }; // White font on headers
-      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.alignment = {
+        horizontal: 'center',  // Centrar el texto horizontalmente
+        vertical: 'middle'     // Centrar el texto verticalmente
+      };
+      cell.font = {
+        name: 'Arial',
+        size: 12,
+        color: { argb: 'FFFFFF' } // Blanco
+      };
+
+      cell.border = {
+        top: { style: 'thin', color: { argb: '000000' } },
+        left: { style: 'thin', color: { argb: '000000' } },
+        bottom: { style: 'thin', color: { argb: '000000' } },
+        right: { style: 'thin', color: { argb: '000000' } }
+      };
     });
+    
+    let row_number = 3;
+    data_bultos.forEach(bulto => {
+      miscolumns.forEach((col, index) => {
+        const colLetter = col.cel; // Columna correspondiente (A, B, C, etc.)
+        const cell = worksheet.getCell(colLetter + row_number); // Obtener la celda según la letra de columna
+        
+        const string_cell_name = col.key as string;
+    
+        // Verificar si la propiedad existe en bulto antes de asignar el valor
+        const value = string_cell_name in bulto ? bulto[string_cell_name] : ''; // Si no existe, asigna cadena vacía
+        
+        // Asignar el valor al cell
+        cell.value = value;
+        
+        // Formatear según el color y el estilo de las columnas definidas en miscolumns
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFFF' }
+
+        };
+        cell.alignment = {
+          horizontal: 'center',
+          vertical: 'middle'
+        };
+        cell.font = {
+          name: 'Arial',
+          size: 11,
+          color: { argb: '000000' }
+        };
+        cell.border = {
+          top: { style: 'thin', color: { argb: '000000' } },
+          left: { style: 'thin', color: { argb: '000000' } },
+          bottom: { style: 'thin', color: { argb: '000000' } },
+          right: { style: 'thin', color: { argb: '000000' } }
+        };
+      });
+      row_number += 1;
+    });
+    
+    
+    
+  
+    // // Set styles for headers (applying different colors to each header)
+    // const headerColors = [
+
+    //   "1F4E78","1F4E78", "1F4E78","1F4E78","1F4E78", "2f75b5", "2f75b5","2f75b5","2f75b5","2f75b5","2f75b5", "5b75d5","5b75d5","5b75d5","5b75d5","5b75d5","5b75d5",
+    //   "1F4E78","1F4E78"
+    // ];
+  
+    // worksheet.getRow(1).eachCell((cell, colNumber) => {
+    //   cell.fill = {
+    //     type: 'pattern',
+    //     pattern: 'solid',
+    //     fgColor: { argb: headerColors[colNumber - 1] } // Apply different color to each header
+    //   };
+    //   cell.font = { bold: false, color: { argb: 'FFFFFF' } }; // White font on headers
+    //   cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    // });
   
     // Save the Excel file
     workbook.xlsx.writeBuffer().then((buffer) => {
@@ -227,9 +348,10 @@ export default function ManifiestoPage() {
       <PageBreadcrumb pageTitle={`Total: ${totalPesoKilos.toFixed(2)}KG              Manifiesto  ${range}`} />
       
       <div className="space-y-6">
-      <button onClick={exportToExcel} className="btn btn-primary">
-  Exportar a Excel
-</button>
+    
+              <Button size="sm" onClick={exportToExcel}>
+              Exportar a Excel
+                </Button>
         <ComponentCard title="Bultos">
 
           <BultosTable bultos={bultos} />
