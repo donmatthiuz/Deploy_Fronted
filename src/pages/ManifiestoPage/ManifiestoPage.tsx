@@ -62,9 +62,21 @@ export default function ManifiestoPage() {
       const nombrerecibe = resultado_data.response.recibe.nombre.toUpperCase();
       const direnvia = resultado_data.response.envia.direccion.toUpperCase();
       const dirrerecibe = resultado_data.response.recibe.direccion.toUpperCase();
-
+      const consigntelephone = resultado_data.response.recibe.telefono;
       console.log(bulto.descripcion)
       return {
+        "SITEID": 23,
+        "WAYBILLORIGINATOR":"F703",
+        "AIRLINEPREFIX": 202,
+        "AWBSERIALNUMBER": 31115884,
+        "WEIGHTCODE": "K",
+        "FDAINDICATOR": "NO",
+        "IMPORTINGCARRIER": "LR",
+        "AMENDMENTFLAG": "A",
+        "AMENDMENTCODE": 21,
+        "ENTRYTYPE": 86,
+        "CURRENCYCODE": "USD",
+        "EXPRESSRELEASE": "Y",
         "HAWB": bulto.codigo,
         "Origen": "GUA",
         "DESTINO": "JFK",
@@ -84,6 +96,8 @@ export default function ManifiestoPage() {
         "CODIGO POSTAL CONSIGN": "",
         "DESCRIPCION DE LA CARGA": descripcionTraducida || "", // Si la traducción falla, se coloca un string vacío
         "BAG": bulto.id,
+        "CONSIGNEETELEPHONE": consigntelephone,
+        "CUSTOMSVALUE":  Math.ceil(bulto.peso / 10) + 6,
       };
     }));
   
@@ -204,7 +218,10 @@ export default function ManifiestoPage() {
       miscolumns.forEach((col, index) => {
         const colLetter = col.cel; // Columna correspondiente (A, B, C, etc.)
         const cell = worksheet.getCell(colLetter + row_number); // Obtener la celda según la letra de columna
-        
+        cell.alignment = {
+          wrapText: true,       // Permite que el texto se ajuste en múltiples líneas
+          vertical: 'top',      // Alineación vertical superior (puedes usar 'middle' o 'bottom' también)
+        };
         const string_cell_name = col.key as string;
     
         // Verificar si la propiedad existe en bulto antes de asignar el valor
@@ -238,32 +255,230 @@ export default function ManifiestoPage() {
       });
       row_number += 1;
     });
-    
-    
-    
   
-    // // Set styles for headers (applying different colors to each header)
-    // const headerColors = [
+    const meses = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
 
-    //   "1F4E78","1F4E78", "1F4E78","1F4E78","1F4E78", "2f75b5", "2f75b5","2f75b5","2f75b5","2f75b5","2f75b5", "5b75d5","5b75d5","5b75d5","5b75d5","5b75d5","5b75d5",
-    //   "1F4E78","1F4E78"
-    // ];
-  
-    // worksheet.getRow(1).eachCell((cell, colNumber) => {
-    //   cell.fill = {
-    //     type: 'pattern',
-    //     pattern: 'solid',
-    //     fgColor: { argb: headerColors[colNumber - 1] } // Apply different color to each header
-    //   };
-    //   cell.font = { bold: false, color: { argb: 'FFFFFF' } }; // White font on headers
-    //   cell.alignment = { horizontal: 'center', vertical: 'middle' };
-    // });
-  
+    const fecha = new Date();
+    const dia = fecha.getDate();
+    const mesNombre = meses[fecha.getMonth()];
+    const anio = fecha.getFullYear();
+    const nombreArchivo = `Manifiesto Pronto Express ${dia} de ${mesNombre} ${anio}.xlsx`;
+
     // Save the Excel file
     workbook.xlsx.writeBuffer().then((buffer) => {
       const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      saveAs(blob, `Bultos_${new Date().toISOString().split("T")[0]}.xlsx`);
+      saveAs(blob, nombreArchivo);
     });
+
+    // Guardar workbook 2 
+
+    
+
+
+
+
+    const workbook2 = new ExcelJS.Workbook();
+    const worksheet2 = workbook2.addWorksheet('Bultos');
+
+
+    worksheet2.mergeCells('A1:C1');
+
+    worksheet2.getCell('A1').value = 'MANIFIESTO DE CARGA   SEGUN GUIA';
+
+    worksheet2.getCell('A1').font = { 
+      name: 'Arial', 
+      size: 12 ,
+      bold: true
+    };
+
+    worksheet2.getCell('A1').alignment = {
+      horizontal: 'center',
+      vertical: 'middle'   
+    };
+
+
+    //
+
+    worksheet2.getColumn('D').width = 22; 
+
+    worksheet2.getCell('D1').value = '202 - 31115884';
+
+    worksheet2.getCell('D1').font = { 
+      name: 'Arial', 
+      size: 12 ,
+      bold: true
+    };
+
+    worksheet2.getCell('D1').alignment = {
+      vertical: 'bottom'   
+    };
+
+    ['A', 'B', 'C',  'E',  'G', 'H', 'J', 'M', 'N', 
+      'O', 'P', 'Q', 'R', 'T','W','X','Y','AA',
+    'AF','AG', 'AH', 'AI','AJ','AK','AL','AM','AN'
+    ,'AO','AP','AQ','AR','AS','AT','AU','AV', 'AY','AZ','BC'].forEach(col => {
+      worksheet2.getColumn(col).width = 28;
+    });
+    ['F', 'I', 'K','AW', 'AX','BA','BB','BD'].forEach(col => {
+      worksheet2.getColumn(col).width = 16;
+    });
+
+    ['S', 'U','V','Z','AB','AC','AD', 'AE'].forEach(col => {
+      worksheet2.getColumn(col).width = 40;
+    });
+    
+
+    worksheet2.getColumn('L').width = 150;
+
+    const miscolumns2 = [
+      { header: 'SITEID', key: 'SITEID', cel: 'A' },
+      { header: 'ARRIVALAIRPORT', key: 'DESTINO', cel: 'B' },
+      { header: 'WAYBILLORIGINATOR', key: 'WAYBILLORIGINATOR', cel: 'C' },
+      { header: 'AIRLINEPREFIX', key: 'AIRLINEPREFIX', cel: 'D' },
+      { header: 'AWBSERIALNUMBER', key: 'AWBSERIALNUMBER', cel: 'E' },
+      { header: 'HOUSEAWB', key: 'HAWB', cel: 'F' },
+      { header: 'MASTERAWBINDICATOR', key: 'MASTERAWBINDICATOR', cel: 'G' },
+      { header: 'ORIGINAIRPORT', key: 'Origen', cel: 'H' },
+      { header: 'PIECES', key: 'PIEZAS', cel: 'I' },
+      { header: 'WEIGHTCODE', key: 'WEIGHTCODE', cel: 'J' },
+      { header: 'WEIGHT', key: 'PESO', cel: 'K' },
+      { header: 'DESCRIPTION', key: 'DESCRIPCION DE LA CARGA', cel: 'L' },
+      { header: 'FDAINDICATOR', key: 'FDAINDICATOR', cel: 'M' },
+      { header: 'IMPORTINGCARRIER', key: 'IMPORTINGCARRIER', cel: 'N' },
+      { header: 'FLIGHTNUMBER', key: 'FLIGHTNUMBER', cel: 'O' },
+      { header: 'ARRIVALDAY', key: 'ARRIVALDAY', cel: 'P' },
+      { header: 'ARRIVALMONTH', key: 'ARRIVALMONTH', cel: 'Q' },
+      { header: 'SHIPPERNAME', key: 'NOMBRE DEL SHIPPER', cel: 'R' },
+      { header: 'SHIPPERSTREETADDRESS', key: 'DIRECCION 1 SHIPPER', cel: 'S' },
+      { header: 'SHIPPERCITY', key: 'CIUDAD SHIPPER', cel: 'T' },
+      { header: 'SHIPPERSTATEORPROVINCE', key: 'SHIPPERSTATEORPROVINCE', cel: 'U' },
+      { header: 'SHIPPERPOSTALCODE', key: 'SHIPPERPOSTALCODE', cel: 'V' },
+      { header: 'SHIPPERCOUNTRY', key: 'PAIS', cel: 'W' },
+      { header: 'SHIPPERTELEPHONE', key: 'SHIPPERTELEPHONE', cel: 'X' },
+      { header: 'CONSIGNEENAME', key: 'NOMBRE DEL CONSIGNATARIO', cel: 'Y' },
+      { header: 'CONSIGNEESTREETADDRESS', key: 'DIRECCION CONSIGNATARIO', cel: 'Z' },
+      { header: 'CONSIGNEECITY', key: 'CIUDAD CONSIGN', cel: 'AA' },
+      { header: 'CONSIGNEESTATEORPROVINCE', key: 'ESTADO', cel: 'AB' },
+      { header: 'CONSIGNEEPOSTALCODE', key: 'CODIGO POSTAL CONSIGN', cel: 'AC' },
+      { header: 'CONSIGNEECOUNTRY', key: 'PAIS CONSIGN', cel: 'AD' },
+      { header: 'CONSIGNEETELEPHONE', key: 'CONSIGNEETELEPHONE', cel: 'AE' },
+      { header: 'AMENDMENTFLAG', key: 'AMENDMENTFLAG', cel: 'AF' },
+      { header: 'AMENDMENTCODE', key: 'AMENDMENTCODE', cel: 'AG' },
+      { header: 'AMENDMENTREASON', key: 'AMENDMENTREASON', cel: 'AH' },
+      { header: 'PTPDESTINATION', key: 'PTPDESTINATION', cel: 'AI' },
+      { header: 'PTPDESTINATIONDAY', key: 'PTPDESTINATIONDAY', cel: 'AJ' },
+      { header: 'PTPDESTINATIONMONTH', key: 'PTPDESTINATIONMONTH', cel: 'AK' },
+      { header: 'BOARDEDPIECES', key: 'BOARDEDPIECES', cel: 'AL' },
+      { header: 'BOARDEDWEIGHTCODE', key: 'BOARDEDWEIGHTCODE', cel: 'AM' },
+      { header: 'BOARDEDWEIGHT', key: 'BOARDEDWEIGHT', cel: 'AN' },
+      { header: 'PARTIALSHIPMENTREF', key: 'PARTIALSHIPMENTREF', cel: 'AO' },
+      { header: 'BROKERCODE', key: 'BROKERCODE', cel: 'AP' },
+      { header: 'INBONDDESTINATION', key: 'INBONDDESTINATION', cel: 'AQ' },
+      { header: 'INBONDDESTINATIONTYPE', key: 'INBONDDESTINATIONTYPE', cel: 'AR' },
+      { header: 'BONDEDCARRIERID', key: 'BONDEDCARRIERID', cel: 'AS' },
+      { header: 'ONWARDCARRIER', key: 'ONWARDCARRIER', cel: 'AT' },
+      { header: 'BONDEDPREMISESID', key: 'BONDEDPREMISESID', cel: 'AU' },
+      { header: 'TRANSFERCONTROLNUMBER', key: 'TRANSFERCONTROLNUMBER', cel: 'AV' },
+      { header: 'ENTRYTYPE', key: 'ENTRYTYPE', cel: 'AW' },
+      { header: 'ENTRYNUMBER', key: 'ENTRYNUMBER', cel: 'AX' },
+      { header: 'COUNTRYOFORIGIN', key: 'PAIS', cel: 'AY' },
+      { header: 'CUSTOMSVALUE', key: 'CUSTOMSVALUE', cel: 'AZ' },
+      { header: 'CURRENCYCODE', key: 'CURRENCYCODE', cel: 'BA' },
+      { header: 'HTSNUMBER', key: 'HTSNUMBER', cel: 'BB' },
+      { header: 'EXPRESSRELEASE', key: 'EXPRESSRELEASE', cel: 'BC' },
+      { header: 'BAG', key: 'BAG', cel: 'BD' },
+    ];
+    
+
+
+    worksheet2.getRow(2).values = miscolumns2.map(col => col.header);
+    
+
+
+
+
+    miscolumns2.forEach((col, index) => {
+      const colLetter = col.cel
+      const cell = worksheet2.getCell(`${colLetter}2`); // Obtener la celda correspondiente (A2, B2, C2, etc.)
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFFFF' } // Establecer el color de fondo
+      };
+      cell.alignment = {
+        horizontal: 'center',  // Centrar el texto horizontalmente
+        vertical: 'middle'     // Centrar el texto verticalmente
+      };
+      cell.font = {
+        name: 'Arial',
+        size: 12,
+        color: { argb: '000000' } // Blanco
+      };
+
+      cell.border = {
+        top: { style: 'thin', color: { argb: '000000' } },
+        left: { style: 'thin', color: { argb: '000000' } },
+        bottom: { style: 'thin', color: { argb: '000000' } },
+        right: { style: 'thin', color: { argb: '000000' } }
+      };
+    });
+
+    let row_number2= 3;
+    data_bultos.forEach(bulto => {
+      miscolumns2.forEach((col, index) => {
+        const colLetter = col.cel;
+        const cell = worksheet2.getCell(colLetter + row_number2); 
+        cell.alignment = {
+          wrapText: true,
+          vertical: 'top',
+        };
+        const string_cell_name = col.key as string;
+    
+
+        const value = string_cell_name in bulto ? bulto[string_cell_name] : ''; // Si no existe, asigna cadena vacía
+        
+        // Asignar el valor al cell
+        cell.value = value;
+        
+        // Formatear según el color y el estilo de las columnas definidas en miscolumns
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFFF' }
+
+        };
+        cell.alignment = {
+          horizontal: 'center',
+          vertical: 'middle'
+        };
+        cell.font = {
+          name: 'Arial',
+          size: 11,
+          color: { argb: '000000' }
+        };
+        cell.border = {
+          top: { style: 'thin', color: { argb: '000000' } },
+          left: { style: 'thin', color: { argb: '000000' } },
+          bottom: { style: 'thin', color: { argb: '000000' } },
+          right: { style: 'thin', color: { argb: '000000' } }
+        };
+      });
+      row_number2 += 1;
+    });
+    
+
+    const nombreArchivo2 = `Manifiesto ${dia} de ${mesNombre} ${anio}.xlsx`;
+
+    workbook2.xlsx.writeBuffer().then((buffer) => {
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      saveAs(blob, nombreArchivo2);
+    });
+
+
+    
   };
   
   
@@ -350,7 +565,7 @@ export default function ManifiestoPage() {
       <div className="space-y-6">
     
               <Button size="sm" onClick={exportToExcel}>
-              Exportar a Excel
+              Descargar Manifiestos
                 </Button>
         <ComponentCard title="Bultos">
 
