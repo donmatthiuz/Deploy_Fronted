@@ -14,6 +14,10 @@ import { saveAs } from "file-saver";
 import ExcelJS from 'exceljs';
 import axios from 'axios';
 import Button from "../../components/ui/button/Button";
+import useCodigo from "../../hooks/useCodigo";
+import { Modal } from "../../components/ui/modal";
+import Input from "../../components/form/input/InputField";
+import Label from "../../components/form/Label";
 
 
 export interface Item {
@@ -31,7 +35,14 @@ export default function ManifiestoPage() {
 
   const { llamado: getPaquetedata } = useApi(`${source_link}/getPaquetedata`);
   
+  const {codigo,setCodigo} = useCodigo();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+
+  
   const exportToExcel = async () => {
     if (!bultos || bultos.length === 0) {
       alert("No hay datos para exportar.");
@@ -68,7 +79,7 @@ export default function ManifiestoPage() {
         "SITEID": 23,
         "WAYBILLORIGINATOR":"F703",
         "AIRLINEPREFIX": 202,
-        "AWBSERIALNUMBER": 31115884,
+        "AWBSERIALNUMBER": codigo,
         "WEIGHTCODE": "K",
         "FDAINDICATOR": "NO",
         "IMPORTINGCARRIER": "LR",
@@ -127,7 +138,7 @@ export default function ManifiestoPage() {
 
     worksheet.getColumn('F').width = 40; 
 
-    worksheet.getCell('F1').value = '202 - 31115884';
+    worksheet.getCell('F1').value = '202 - ' + codigo;
 
     worksheet.getCell('F1').font = { 
       name: 'Arial', 
@@ -304,7 +315,7 @@ export default function ManifiestoPage() {
 
     worksheet2.getColumn('D').width = 22; 
 
-    worksheet2.getCell('D1').value = '202 - 31115884';
+    worksheet2.getCell('D1').value = '202 - ' + codigo;
 
     worksheet2.getCell('D1').font = { 
       name: 'Arial', 
@@ -488,6 +499,10 @@ export default function ManifiestoPage() {
   const [bultos, setBultos] = useState<{ id: number; numeroBulto: number; codigo: string; descripcion: string; peso: number; tipo: string, id_real: number | null; }[]>([]);
   const { llamado: obtener_paquetes_fecha_paquete } = useApi(`${source_link}/obtener_paquetes_fecha_tipo`);
 
+  const handleChangeGuia = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setCodigo( value);
+  }; 
 
   const [bultoCounter, setBultoCounter] = useState(1);
 
@@ -509,6 +524,10 @@ export default function ManifiestoPage() {
   const { range, fecha_inicio, fecha_fin } = getWeekRange();
 
   useEffect(() => {
+    if (codigo==''){
+      setIsModalOpen(true)
+     }
+   
     const get_frios = async () => {
       const body_frio = { fecha_inicio, fecha_fin, tipo: "Frio" };
       const body_seco = { fecha_inicio, fecha_fin, tipo: "Seco" };
@@ -556,6 +575,26 @@ export default function ManifiestoPage() {
 
   return (
     <>
+        <Modal isOpen={isModalOpen} onClose={closeModal} showCloseButton={true}>
+          <div>
+          <ComponentCard title="No tienes numero Guia">
+            <div className="space-y-0">
+            <Label htmlFor="codigo">Insertar numero Guia</Label>
+                <Input 
+                  type="text" 
+                  id="codigo"
+                  name="codigo"
+                  onChange={handleChangeGuia}
+                />
+                <br></br>
+                <Button size="sm" onClick={closeModal}>
+              Agregar Numero Guia
+                </Button>
+            </div>
+          </ComponentCard>
+          </div>
+        </Modal>
+
       <PageMeta
         title={`${PAGE_NAME} - Manifiesto`}
         description="Esta es la página de tablas básicas para el Dashboard de TailAdmin en React.js y Tailwind CSS"
