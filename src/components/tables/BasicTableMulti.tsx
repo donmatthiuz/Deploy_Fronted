@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table"
 import Button from "../ui/button/Button";
 import { Item } from "../../pages/ManifiestoPage/ManifiestoPage";
 import Checkbox from "../form/input/Checkbox";
+import {DeleteIcon, PrintIcon}  from "../../icons"
 
 interface BasicTableMultiProps {
   tableData: Item[];
@@ -117,21 +118,26 @@ export function BultosTable({ bultos }: { bultos: { id: number; numeroBulto: num
                 <Button size="sm">
                   Nuevo Bulto
                 </Button>
+                <Button size="sm">
+                  Imprimir en Rango
+                </Button>
 
         </div>
       </div>
       <div className="max-w-full overflow-x-auto">
         <div className="min-w-[800px]">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell isHeader className="w-1/5 text-center">Bulto</TableCell>
-                <TableCell isHeader className="w-1/5 text-center">Código</TableCell>
-                <TableCell isHeader className="w-1/5 text-center">Descripción</TableCell>
-                <TableCell isHeader className="w-1/5 text-center">Peso (Lbs)</TableCell>
-                <TableCell isHeader className="w-1/5 text-center">Tipo</TableCell>
-              </TableRow>
-            </TableHeader>
+          <TableHeader>
+            <TableRow>
+              <TableCell isHeader className="text-center">Bulto</TableCell>
+              <TableCell isHeader className="text-center">Código</TableCell>
+              <TableCell isHeader className="text-center">Descripción</TableCell>
+              <TableCell isHeader className="text-center">Peso (Lbs)</TableCell>
+              <TableCell isHeader className="text-center">Tipo</TableCell>
+              <TableCell isHeader className="min-w-[140px] text-center">Imprimir</TableCell>
+              <TableCell isHeader className="min-w-[140px] text-center">Quitar</TableCell>
+            </TableRow>
+          </TableHeader>
             <TableBody>
               {bultos.map((bulto) => (
                 <TableRow key={`${bulto.numeroBulto}`}>
@@ -140,6 +146,14 @@ export function BultosTable({ bultos }: { bultos: { id: number; numeroBulto: num
                   <TableCell className="w-1/5 text-center">{bulto.descripcion}</TableCell>
                   <TableCell className="w-1/5 text-center">{bulto.peso}</TableCell>
                   <TableCell className="w-1/5 text-center">{bulto.tipo}</TableCell>
+                  <TableCell className="w-1/5 text-center">
+                  <Button  variant="outline" onClick={() => { } } startIcon={<PrintIcon />} children={undefined}>  
+                  </Button>
+                  </TableCell>
+                  <TableCell className="w-1/5 text-center">
+                  <Button size="sm"  variant="outline"  onClick={() => { } } startIcon={<DeleteIcon />} children={undefined}>  
+                  </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

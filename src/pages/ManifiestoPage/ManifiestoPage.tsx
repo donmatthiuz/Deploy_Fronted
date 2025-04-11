@@ -498,10 +498,11 @@ export default function ManifiestoPage() {
   const [tableData_secos, setTableDataSecos] = useState<Item[]>([]);
   const [bultos, setBultos] = useState<{ id: number; numeroBulto: number; codigo: string; descripcion: string; peso: number; tipo: string, id_real: number | null; }[]>([]);
   const { llamado: obtener_paquetes_fecha_paquete } = useApi(`${source_link}/obtener_paquetes_fecha_tipo`);
+  const [codigomio, setCodigomio] = useState('')
 
   const handleChangeGuia = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    setCodigo( value);
+    setCodigomio(value)
   }; 
 
   const [bultoCounter, setBultoCounter] = useState(1);
@@ -524,7 +525,7 @@ export default function ManifiestoPage() {
   const { range, fecha_inicio, fecha_fin } = getWeekRange();
 
   useEffect(() => {
-    if (codigo==''){
+    if (codigo=='' ){
       setIsModalOpen(true)
      }
    
@@ -559,6 +560,12 @@ export default function ManifiestoPage() {
 
   };
 
+  const add_Codigo = () =>{
+
+    setCodigo(codigomio)
+    closeModal();
+  }
+
   const addSameBulto = (items: Item[]) => {
     if (items.length === 0) return;
     const codigo = items[0].codigo;
@@ -582,12 +589,13 @@ export default function ManifiestoPage() {
             <Label htmlFor="codigo">Insertar numero Guia</Label>
                 <Input 
                   type="text" 
-                  id="codigo"
-                  name="codigo"
+                  id="codigomio"
+                  value={codigomio}
+                  name="codigomio"
                   onChange={handleChangeGuia}
                 />
                 <br></br>
-                <Button size="sm" onClick={closeModal}>
+                <Button size="sm" onClick={add_Codigo}>
               Agregar Numero Guia
                 </Button>
             </div>
@@ -599,13 +607,16 @@ export default function ManifiestoPage() {
         title={`${PAGE_NAME} - Manifiesto`}
         description="Esta es la página de tablas básicas para el Dashboard de TailAdmin en React.js y Tailwind CSS"
       />
-      <PageBreadcrumb pageTitle={`Total: ${totalPesoKilos.toFixed(2)}KG              Manifiesto  ${range}`} />
+      <PageBreadcrumb pageTitle={`Manifiesto 202 - ${codigo}  |   Semana: ${range}`} />
+      
+
       
       <div className="space-y-6">
     
               <Button size="sm" onClick={exportToExcel}>
               Descargar Manifiestos
                 </Button>
+                <PageBreadcrumb pageTitle={`Total: ${totalPesoKilos.toFixed(2)}KG`} />
         <ComponentCard title="Bultos">
 
           <BultosTable bultos={bultos} />

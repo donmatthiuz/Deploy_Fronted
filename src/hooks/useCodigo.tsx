@@ -18,10 +18,16 @@ const CodigoProvider = ({ children }) => {
   useEffect(() => {
     const hoy = new Date();
     const dia = hoy.getDay(); // Miércoles = 3
-    if (dia === 3) {
+  
+    const hoyStr = hoy.toISOString().split('T')[0]; // formato 'YYYY-MM-DD'
+    const ultimaResetFecha = localStorage.getItem('codigo_reset_date');
+  
+    if (dia === 3 && ultimaResetFecha !== hoyStr) {
       setCodigo('');
+      localStorage.setItem('codigo_reset_date', hoyStr); // marca que ya se reseteó hoy
     }
   }, []);
+  
 
   // Sincroniza el código con localStorage
   useEffect(() => {
