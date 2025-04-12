@@ -15,4 +15,7 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    allowedHosts: ['prontoexpress.org', 'localhost', '127.0.0.1'], // Agrega tus hosts permitidos aquí
+  }
 });

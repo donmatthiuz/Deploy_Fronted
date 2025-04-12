@@ -1,0 +1,267 @@
+@media print {
+  .head {
+    background-color: #f59f89 !important; 
+    -webkit-print-color-adjust: exact; 
+    color-adjust: exact; 
+  }
+}
+
+
+.label-name, .label-name-2 {
+  font-weight: bold;
+}
+
+.descripcion-label, .descripcion-label-2 {
+  flex-grow: 1; /* Permite que el contenido se ajuste */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid #f59f89 !important;
+  padding-left: 5px;/* Agrega "..." si el contenido es demasiado largo */
+}
+
+/* Your existing CSS */
+.foot {
+  font-size: 9px;
+  font-family: Arial, sans-serif;
+}
+
+.contenido_header1 {
+  text-align: center;
+  flex-wrap: wrap; /* Permite que el texto rodee la imagen */
+
+}
+.contenido_header1 img {
+  float: inline-start;
+  width: 80px; /* Ajusta el tamaño de la imagen */
+  margin-right: 10px; /* Espacio entre la imagen y el texto */
+}
+
+
+
+.contenido_header1 h2 {
+  font-size: 20px;
+}
+
+
+
+.contenido_header1 p {
+  text-align: left; /* Mantiene el texto alineado a la izquierda */
+  font-size: 11px;
+}
+
+
+
+
+.bauncher-contenido2 {
+  border: 2px solid #81493b;
+  height: fit-content;
+  
+  display: flex;
+  flex-direction: column;
+}
+
+.label-display {
+  display: grid;
+  grid-template-columns: 1fr 20fr;
+  height: 25px;
+  margin-bottom: 10px;
+
+
+}
+
+.label2-display {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Espacio entre elementos */
+  height: 22px;
+}
+.label-name {
+  grid-column: 1 / span 1;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  margin-left: 5px;
+}
+
+.label-name-3{
+  grid-column: 3 / span 1;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  margin-left: 5px;
+}
+
+.label-name-2 {
+  grid-column: 4 / span 1;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  margin-left: 5px;
+}
+
+.descripcion-label {
+  grid-column: 2;
+  border-bottom: 1px solid #f59f89 !important;
+  display: flex;
+  align-items: center;
+  padding-left: 5px;
+}
+
+.descripcion-label-2 {
+  grid-column: 5;
+  border-bottom: 1px solid #f59f89 !important;
+  display: flex;
+  align-items: center;
+  padding-left: 5px;
+}
+
+.descripcion-label-3{
+  grid-column: 2;
+  border-bottom: 1px solid #f59f89 !important;
+  margin: 0;
+  height: 20px;
+  font-weight: bold;
+}
+
+.descripcion-label-4{
+  grid-column: 4;
+  border-bottom: 1px solid #f59f89 !important;
+  margin: 0;
+  height: 20px;
+  font-weight: bold;
+}
+
+.contained {
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  flex-grow: 1; 
+  text-align: center; 
+}
+
+.contained-3{
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  flex-grow: 1; 
+  text-align: center; 
+}
+
+.bulto {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  align-self: flex-end;
+  margin-right: 10px;
+}
+
+.info-table {
+  margin-top: 0px;
+}
+
+
+
+.head {
+  background-color: #f59f89;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  border: 1px solid #81493b;
+  padding: 0;
+}
+
+
+
+.paquete{
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  border: 1px solid #9d4d3c;
+}
+
+
+.contenido_2_2{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.contenido_2_2 img {
+  float: left;
+  width: 100px;
+}
+
+.valores{
+  font-family: Arial, sans-serif;
+  font-size: 25px;
+  border: 1px solid #9d4d3c; 
+}
+
+.valores2{
+  font-family: Arial, sans-serif;
+  font-size: 25px;
+
+  border-bottom: none;
+}
+.contenido{
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  height: max-content;
+  display: flex;
+  border: 1px solid #81493b;
+}
+
+.info-table {
+  margin-top: 7px;
+  border-collapse: collapse; 
+  width: 100%; 
+  margin-left: 0px;
+}
+
+
+
+.peso-weight{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  
+}
+
+.ctd{
+  border: 1px solid #9d4d3c; 
+}
+.peso-cantidad{
+  font-family: Arial, sans-serif;
+  font-size: 40px;
+  margin: 0;
+}
+
+.titulo{
+  font-family: Arial, sans-serif;
+  font-size: 55px;
+  margin: 0;
+}
+
+.titulo-22{
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  margin: 0;
+}
+
+.footer-data{
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 3fr ;
+  margin: 0;
+  align-items: center;
+}
+
+.recuadro{
+  position: absolute;
+  width: 750px;
+  top: 0;
+  margin-top: 60px;
+  margin-left: 10px;
+}
+
+
+
+

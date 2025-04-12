@@ -695,6 +695,49 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                         Agregar Nuevo Cliente Recibe
                       </button>
                     </div>
+                    <Dialog open={open2} onClose={() => setOpen2(false)} fullWidth maxWidth="sm" disablePortal>
+                      <DialogTitle>Buscar Cliente</DialogTitle>
+                      <DialogContent>
+                        <TextField
+                          fullWidth
+                          margin="dense"
+                          label="Ingrese DPI o nombre"
+                          variant="outlined"
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                        />
+                        <List>
+                          {filtrarClientes().map((cliente) => (
+                            <ListItem key={cliente.dpi} disablePadding>
+                              <ListItemButton
+                                onClick={() => {
+                                  setClienteSeleccionado(cliente);
+                                  select_Cliente(cliente.dpi)
+                                  setOpen2(false);
+                                }}
+                              >
+                                <ListItemText primary={`${cliente.nombre} - ${cliente.dpi}`} />
+                                <ImageListItem sx={{ width: 100, height: 100 }}>
+                                  <img
+                                    src={`data:image/jpeg;base64,${cliente.imagen_dpi}`}
+                                    alt="Descripción de la imagen"
+                                    loading="lazy"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Evita que se active el ListItemButton
+                                      handleOpenImage(cliente.imagen_dpi);
+                                    }}
+                                  />
+                                </ImageListItem>
+
+
+                              </ListItemButton>
+                            </ListItem>
+                          ))}
+                        </List>
+                      </DialogContent>
+                    </Dialog>
+                    
                   </>
                 ) : (
                   <div className="mt-4 space-y-6">

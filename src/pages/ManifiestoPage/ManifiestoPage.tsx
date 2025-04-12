@@ -37,6 +37,10 @@ export default function ManifiestoPage() {
   
   const {codigo,setCodigo} = useCodigo();
 
+  const [useSameID, setUseSameID] = useState(false);
+  
+
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -542,7 +546,7 @@ export default function ManifiestoPage() {
     get_frios();
   }, []);
 
-  const addBulto = (items: Item[], useSameID = false) => {
+  const addBulto = (items: Item[]) => {
     if (items.length === 0) return;
     const codigo = items[0].codigo;
     const id_real = items[0].id; // ✅ Se asigna el id del primer item
@@ -550,12 +554,41 @@ export default function ManifiestoPage() {
     const peso = items.reduce((sum, item) => parseFloat(sum) + parseFloat(item.peso), 0);
     const tipo = items[0].tipo;
 
-    setBultos([...bultos, { id: bultos.length + 1, numeroBulto: bultoCounter, codigo, descripcion, peso, tipo, id_real }]);
-    setBultoCounter(bultoCounter + 1);
-    if (!useSameID) {
-      setBultoCounter(bultoCounter + 1);
+    if (!useSameID){
+      const lastId = bultos.length > 0 ? Math.max(...bultos.map(b => b.id)) : 0;
+      const lastNumeroBulto = bultos.length > 0 ? Math.max(...bultos.map(b => b.numeroBulto)) : 0;
+
+      setBultos([
+        ...bultos,
+        {
+          id: lastId + 1,
+          numeroBulto: lastNumeroBulto + 1,
+          codigo,
+          descripcion,
+          peso,
+          tipo,
+          id_real
+        }
+      ]);
+
+      //setBultoCounter(bultoCounter + 1);
     }else{
-      console.log("EL MISMO")
+      const lastId = bultos.length > 0 ? Math.max(...bultos.map(b => b.id)) : 0;
+      const lastNumeroBulto = bultos.length > 0 ? Math.max(...bultos.map(b => b.numeroBulto)) : 0;
+
+      setBultos([
+        ...bultos,
+        {
+          id: lastId,
+          numeroBulto: lastNumeroBulto,
+          codigo,
+          descripcion,
+          peso,
+          tipo,
+          id_real
+        }
+      ]);
+      //setBultoCounter(bultoCounter);
     }
 
   };
@@ -622,10 +655,22 @@ export default function ManifiestoPage() {
           <BultosTable bultos={bultos} />
         </ComponentCard>
         <ComponentCard title="Frios">
-          <BasicTableMulti tableData={tableData_frios} setTableData={setTableDataFrios} addBulto={addBulto} addSameBulto={addSameBulto} />
+          <BasicTableMulti 
+          tableData={tableData_frios} 
+          setTableData={setTableDataFrios} 
+          addBulto={addBulto} 
+          addSameBulto={addSameBulto} 
+          useSameID={useSameID}
+          setUseSameID={setUseSameID}/>
         </ComponentCard>
         <ComponentCard title="Secos">
-          <BasicTableMulti tableData={tableData_secos} setTableData={setTableDataSecos} addBulto={addBulto} addSameBulto={addSameBulto} />
+          <BasicTableMulti 
+            tableData={tableData_secos} 
+            setTableData={setTableDataSecos} 
+            addBulto={addBulto} 
+            addSameBulto={addSameBulto}
+            useSameID={useSameID}
+            setUseSameID={setUseSameID} />
         </ComponentCard>
       </div>
     </>

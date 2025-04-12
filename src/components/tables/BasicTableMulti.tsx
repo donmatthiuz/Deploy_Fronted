@@ -8,14 +8,17 @@ import {DeleteIcon, PrintIcon}  from "../../icons"
 interface BasicTableMultiProps {
   tableData: Item[];
   setTableData: (data: Item[]) => void;
-  addBulto: (items: Item[], useSameID:boolean) => void;
+  addBulto: (items: Item[]) => void;
   addSameBulto: (items: Item[]) => void;
+  setUseSameID: (value: boolean) => void;
+  useSameID: boolean;
+
 
 }
 
-export default function BasicTableMulti({ tableData, setTableData, addBulto, addSameBulto }: BasicTableMultiProps) {
+export default function BasicTableMulti({ tableData, setTableData, addBulto, addSameBulto , setUseSameID, useSameID}: BasicTableMultiProps) {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
-  const [useSameID, setUseSameID] = useState(false);
+  
 
   const totalPeso = tableData
     .filter((item) => selectedRows.includes(item.id))
@@ -30,8 +33,9 @@ export default function BasicTableMulti({ tableData, setTableData, addBulto, add
   const handleAddBulto = () => {
     const selectedItems = tableData.filter((item) => selectedRows.includes(item.id));
     if (selectedItems.length === 0) return;
-    addBulto(selectedItems,useSameID);
-    setTableData(tableData.filter((item) => !selectedRows.includes(item.id)));
+    addBulto(selectedItems);
+    setT2
+    ableData(tableData.filter((item) => !selectedRows.includes(item.id)));
     setSelectedRows([]);
   };
 
@@ -119,7 +123,7 @@ export function BultosTable({ bultos }: { bultos: { id: number; numeroBulto: num
                   Nuevo Bulto
                 </Button>
                 <Button size="sm">
-                  Imprimir en Rango
+                  Imprimir
                 </Button>
 
         </div>
@@ -134,7 +138,7 @@ export function BultosTable({ bultos }: { bultos: { id: number; numeroBulto: num
               <TableCell isHeader className="text-center">Descripción</TableCell>
               <TableCell isHeader className="text-center">Peso (Lbs)</TableCell>
               <TableCell isHeader className="text-center">Tipo</TableCell>
-              <TableCell isHeader className="min-w-[140px] text-center">Imprimir</TableCell>
+             
               <TableCell isHeader className="min-w-[140px] text-center">Quitar</TableCell>
             </TableRow>
           </TableHeader>
@@ -146,10 +150,7 @@ export function BultosTable({ bultos }: { bultos: { id: number; numeroBulto: num
                   <TableCell className="w-1/5 text-center">{bulto.descripcion}</TableCell>
                   <TableCell className="w-1/5 text-center">{bulto.peso}</TableCell>
                   <TableCell className="w-1/5 text-center">{bulto.tipo}</TableCell>
-                  <TableCell className="w-1/5 text-center">
-                  <Button  variant="outline" onClick={() => { } } startIcon={<PrintIcon />} children={undefined}>  
-                  </Button>
-                  </TableCell>
+ 
                   <TableCell className="w-1/5 text-center">
                   <Button size="sm"  variant="outline"  onClick={() => { } } startIcon={<DeleteIcon />} children={undefined}>  
                   </Button>
