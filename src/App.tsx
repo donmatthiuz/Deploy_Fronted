@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
-import SignUp from "./pages/AuthPages/SignUp";
+
 import NotFound from "./pages/OtherPage/NotFound";
 // import UserProfiles from "./pages/UserProfiles";
 import Videos from "./pages/UiElements/Videos";
@@ -24,7 +24,7 @@ import { useEffect, useState } from "react";
 import useApi from "./hooks/useApi";
 import source_link from "./repositori/source_repo";
 import useToken, { parseJwt } from "./hooks/useToken";
-import BasicTables from "./pages/Tables/BasicTables";
+
 
 
 export default function App() {

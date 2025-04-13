@@ -1,5 +1,3 @@
-import GridShape from "../../components/common/GridShape";
-import { Link } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
 import PAGE_NAME from "../../pronto";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -9,15 +7,14 @@ import { BultosTable } from "../../components/tables/BasicTableMulti";
 import { useEffect, useState } from "react";
 import source_link from "../../repositori/source_repo";
 import useApi from "../../hooks/useApi";
-import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import ExcelJS from 'exceljs';
-import axios from 'axios';
 import Button from "../../components/ui/button/Button";
 import useCodigo from "../../hooks/useCodigo";
 import { Modal } from "../../components/ui/modal";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
+import Swal from "sweetalert2";
 
 
 export interface Item {
@@ -42,14 +39,19 @@ export default function ManifiestoPage() {
 
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const openModal = () => setIsModalOpen(true);
+
   const closeModal = () => setIsModalOpen(false);
 
 
   
   const exportToExcel = async () => {
     if (!bultos || bultos.length === 0) {
-      alert("No hay datos para exportar.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin datos',
+        text: 'No hay datos para el manifiesto',
+        confirmButtonText: 'Aceptar'
+      });
       return;
     }
   
@@ -230,7 +232,7 @@ export default function ManifiestoPage() {
     
     let row_number = 3;
     data_bultos.forEach(bulto => {
-      miscolumns.forEach((col, index) => {
+      miscolumns.forEach((col) => {
         const colLetter = col.cel; // Columna correspondiente (A, B, C, etc.)
         const cell = worksheet.getCell(colLetter + row_number); // Obtener la celda según la letra de columna
         cell.alignment = {
@@ -240,7 +242,10 @@ export default function ManifiestoPage() {
         const string_cell_name = col.key as string;
     
         // Verificar si la propiedad existe en bulto antes de asignar el valor
-        const value = string_cell_name in bulto ? bulto[string_cell_name] : ''; // Si no existe, asigna cadena vacía
+        const value = string_cell_name in bulto
+          ? bulto[string_cell_name as keyof typeof bulto]
+          : '';
+
         
         // Asignar el valor al cell
         cell.value = value;
@@ -415,7 +420,7 @@ export default function ManifiestoPage() {
 
 
 
-    miscolumns2.forEach((col, index) => {
+    miscolumns2.forEach((col) => {
       const colLetter = col.cel
       const cell = worksheet2.getCell(`${colLetter}2`); // Obtener la celda correspondiente (A2, B2, C2, etc.)
       cell.fill = {
@@ -443,7 +448,7 @@ export default function ManifiestoPage() {
 
     let row_number2= 3;
     data_bultos.forEach(bulto => {
-      miscolumns2.forEach((col, index) => {
+      miscolumns2.forEach((col) => {
         const colLetter = col.cel;
         const cell = worksheet2.getCell(colLetter + row_number2); 
         cell.alignment = {
@@ -453,7 +458,10 @@ export default function ManifiestoPage() {
         const string_cell_name = col.key as string;
     
 
-        const value = string_cell_name in bulto ? bulto[string_cell_name] : ''; // Si no existe, asigna cadena vacía
+        const value = string_cell_name in bulto
+        ? bulto[string_cell_name as keyof typeof bulto]
+        : '';
+
         
         // Asignar el valor al cell
         cell.value = value;
@@ -509,7 +517,7 @@ export default function ManifiestoPage() {
     setCodigomio(value)
   }; 
 
-  const [bultoCounter, setBultoCounter] = useState(1);
+  const [bultoCounter] = useState(1);
 
   const getWeekRange = () => {
     const today = new Date();
@@ -551,7 +559,10 @@ export default function ManifiestoPage() {
     const codigo = items[0].codigo;
     const id_real = items[0].id; // ✅ Se asigna el id del primer item
     const descripcion = items.map(item => item.contenido).join(", ");
-    const peso = items.reduce((sum, item) => parseFloat(sum) + parseFloat(item.peso), 0);
+    const peso = items.reduce((sum: number, item) => sum + (parseFloat(item.peso?.toString()) || 0), 0);
+
+
+
     const tipo = items[0].tipo;
 
     if (!useSameID){
@@ -603,10 +614,10 @@ export default function ManifiestoPage() {
     if (items.length === 0) return;
     const codigo = items[0].codigo;
     const descripcion = items.map(item => item.contenido).join(", ");
-    const peso = items.reduce((sum, item) => parseFloat(sum) + parseFloat(item.peso), 0);
+    const peso = items.reduce((sum: number, item) => sum + (parseFloat(item.peso?.toString()) || 0), 0);
     const tipo = items[0].tipo;
 
-    setBultos([...bultos, { id: bultos.length + 1, numeroBulto: bultoCounter, codigo, descripcion, peso, tipo }]);
+    setBultos([...bultos, { id: bultos.length + 1, numeroBulto: bultoCounter, codigo, descripcion, peso, tipo ,   id_real: null}]);
   };
 
   // Calcular el peso total de los bultos en libras y convertir a kilos

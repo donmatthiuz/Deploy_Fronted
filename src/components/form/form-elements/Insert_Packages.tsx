@@ -1,12 +1,12 @@
 import { SetStateAction, useEffect, useRef, useState } from "react";
-import { Modal, Box, Typography, Stepper, Step, StepLabel, Button, Dialog, DialogTitle, DialogContent, TextField, List, ListItem, ListItemButton, ListItemText, ImageListItem } from "@mui/material";
+import { Box, Typography, Stepper, Step, StepLabel, Button, Dialog, DialogTitle, DialogContent, TextField, List, ListItem, ListItemButton, ListItemText, ImageListItem } from "@mui/material";
 import ComponentCard from "../../common/ComponentCard";
 import Label from "../Label";
 import Input from "../input/InputField";
 import Select from "../Select";
 import TextArea from "../input/TextArea";
 import { UploadImage } from "../../UploadImage/UploadImage";
-import { object, string, number, boolean } from 'yup';
+import { object, string, number } from 'yup';
 import useForm from "../../../hooks/useForm";
 import useApi from "../../../hooks/useApi";
 import source_link from "../../../repositori/source_repo";
@@ -79,11 +79,16 @@ const schema_recibe = object({
   direccion_recibe: string().required('Direccion requerido'),
 })
 
+type InsertPackagesStepperProps = {
+  open: boolean;
+  handleClose: (value: boolean) => void;
+};
+
 const steps = ["Información Paquete", "Información Cliente", "Método de Pago"];
 
-export default function InsertPackagesStepper({ open, handleClose }) {
+export default function InsertPackagesStepper({ open, handleClose }: InsertPackagesStepperProps) {
 
-
+  console.log(open);
   const [info, setInfo] = useState({
     envia: "",
     direccion_envia: "",
@@ -106,7 +111,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
     tipo: ""
   });
 
-  const handleChange_Info = (key, value) => {
+  const handleChange_Info = (key: string, value: string | number | string[] | undefined) => {
     setInfo(prev => ({
       ...prev,
       [key]: value, // Actualiza dinámicamente la propiedad con el nuevo valor
@@ -153,7 +158,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
   const usuario = jwt ? jwt.usuario : null;
 
 
-  const { values: valuesPaquete, setValue: setValuePaquete, validate: validatePaquete, errors: errorsPaquete } = useForm(schema_paquet, { 
+  const { values: valuesPaquete, setValue: setValuePaquete, errors: errorsPaquete } = useForm(schema_paquet, { 
     codigo: '', 
     contenido: '', 
     peso: 0, 
@@ -167,13 +172,30 @@ export default function InsertPackagesStepper({ open, handleClose }) {
 
   const handleChangePaquete = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setValuePaquete(name as keyof typeof value, value);
+    const keys = [
+      "contenido",
+      "codigo",
+      "monto",
+      "tipo",
+      "peso",
+      "dpi_envia_d",
+      "dpi_recibe_d",
+      "metodo_pago"
+    ] as const;
+    const isValidKey = (key: unknown): key is typeof keys[number] => {
+      return typeof key === 'string' && keys.includes(key as typeof keys[number]);
+    };
+    
+    if (isValidKey(name)) {
+      setValuePaquete(name, value);
+    }
+    
   }; 
 
 
 
 
-  const { values: valuesEnvia, setValue: setValueEnvia, validate: validateEnvia, errors: errorsEnvia } = useForm(schema_envia, { 
+  const { values: valuesEnvia, setValue: setValueEnvia, errors: errorsEnvia } = useForm(schema_envia, { 
     dpi_envia: '', 
     nombre_envia: '', 
     telefono_envia: '', 
@@ -183,11 +205,23 @@ export default function InsertPackagesStepper({ open, handleClose }) {
 
   const handleChangeEnvia = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setValueEnvia(name as keyof typeof value, value); // Usa type assertion
+    const keysEnvia = [
+      "dpi_envia",
+      "nombre_envia",
+      "telefono_envia",
+      "direccion_envia"
+    ] as const;
+
+    const isValidEnviaKey = (key: unknown): key is typeof keysEnvia[number] => {
+      return typeof key === 'string' && keysEnvia.includes(key as typeof keysEnvia[number]);
+    };
+    if (isValidEnviaKey(name)) {
+      setValueEnvia(name, value);
+    }
   }; 
 
 
-  const { values: valuesRecibe, setValue: setValueRecibe, validate: validateRecibe, errors: errorsRecibe } = useForm(schema_recibe, { 
+  const { values: valuesRecibe, setValue: setValueRecibe, errors: errorsRecibe } = useForm(schema_recibe, { 
     dpi_recibe: '', 
     nombre_recibe: '', 
     telefono_recibe: '', 
@@ -196,7 +230,19 @@ export default function InsertPackagesStepper({ open, handleClose }) {
 
   const handleChangeRecibe = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setValueRecibe(name as keyof typeof value, value); 
+    const keysRecibe = [
+      "dpi_recibe",
+      "nombre_recibe",
+      "telefono_recibe",
+      "direccion_recibe"
+    ] as const;
+
+    const isValidRecibeKey = (key: unknown): key is typeof keysRecibe[number] => {
+      return typeof key === 'string' && keysRecibe.includes(key as typeof keysRecibe[number]);
+    };
+    if (isValidRecibeKey(name)) {
+      setValueRecibe(name, value);
+    }
   }; 
 
 
@@ -213,13 +259,8 @@ export default function InsertPackagesStepper({ open, handleClose }) {
   };
   const [activeStep, setActiveStep] = useState(0);
   const [skipped, setSkipped] = useState(new Set<number>());
-  const [message, setMessage] = useState("");
-  const [newClientDpi, setNewClientDpi] = useState("");
-  const [newClientName, setNewClientName] = useState("");
-  const [newClientPhone, setNewClientPhone] = useState("");
-  const [newClientAddress, setNewClientAddress] = useState("");
-  const [selectedClientRecibe, setSelectedClientRecibe] = useState<string | null>(null);
-  const [selectedClientEnvia, setSelectedClientEnvia] = useState<string | null>(null);
+  const [, setSelectedClientRecibe] = useState<string | null>(null);
+  const [, setSelectedClientEnvia] = useState<string | null>(null);
   const [isAddingNewClientRecibe, setIsAddingNewClientRecibe] = useState(false);
   const [isAddingNewClientEnvia, setIsAddingNewClientEnvia] = useState(false);
   const [fileenvia, setFileEnvia] = useState<File | null>(null);
@@ -253,14 +294,19 @@ export default function InsertPackagesStepper({ open, handleClose }) {
     }
   }, [readyToPrint]);
 
-
+  interface Cliente {
+    nombre: string;
+    dpi: string;
+    imagen_dpi: string;
+    // Agrega aquí más propiedades si es necesario
+  }
 
   const [open2, setOpen2] = useState(false);
   
   const [search, setSearch] = useState("");
 
-  const [clientes, setClientes] = useState([]);
-  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  
   const [tipe_cliente, setTipeCliente]  = useState("ninguno")
 
 
@@ -280,16 +326,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
   ];
 
   // Simulación de clientes disponibles (en un caso real serían obtenidos de una base de datos)
-  const clients = [
-    { value: "cliente1", label: "763382110101" },
-    { value: "cliente2", label: "449262050101" },
-    { value: "cliente3", label: "336206040101" },
-    { value: "cliente3", label: "158553620101" },
-    { value: "cliente3", label: "736812840101" },
-    { value: "cliente3", label: "665885570101" },
-    { value: "cliente3", label: "840195020101" },
-    { value: "cliente3", label: "377656060101" },
-  ];
+ 
 
 
   const isStepSkipped = (step: number) => skipped.has(step);
@@ -321,7 +358,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
         direccion: valuesEnvia.direccion_envia
       }
       envia = valuesEnvia.dpi_envia
-      const response = await insertarCliente(fileenvia,body,"POST")
+      await insertarCliente(fileenvia!,body,"POST")
 
       handleChange_Info("direccion_envia", valuesEnvia.direccion_envia)
       handleChange_Info("envia", valuesEnvia.nombre_envia)
@@ -336,7 +373,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
         direccion: valuesRecibe.direccion_recibe
       }
       recibe = valuesRecibe.dpi_recibe
-      const response = await insertarCliente(filerecibe,body,"POST")
+      await insertarCliente(filerecibe!,body,"POST")
 
       handleChange_Info("direccion_recibe", valuesRecibe.direccion_recibe)
       handleChange_Info("recibe", valuesRecibe.nombre_recibe)
@@ -564,7 +601,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                             <ListItem key={cliente.dpi} disablePadding>
                               <ListItemButton
                                 onClick={() => {
-                                  setClienteSeleccionado(cliente);
+                                  
                                   select_Cliente(cliente.dpi)
                                   setOpen2(false);
                                 }}
@@ -695,6 +732,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                         Agregar Nuevo Cliente Recibe
                       </button>
                     </div>
+                                       
                     <Dialog open={open2} onClose={() => setOpen2(false)} fullWidth maxWidth="sm" disablePortal>
                       <DialogTitle>Buscar Cliente</DialogTitle>
                       <DialogContent>
@@ -711,7 +749,7 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                             <ListItem key={cliente.dpi} disablePadding>
                               <ListItemButton
                                 onClick={() => {
-                                  setClienteSeleccionado(cliente);
+                                  
                                   select_Cliente(cliente.dpi)
                                   setOpen2(false);
                                 }}
@@ -737,7 +775,15 @@ export default function InsertPackagesStepper({ open, handleClose }) {
                         </List>
                       </DialogContent>
                     </Dialog>
-                    
+                    <Dialog open={openImage} onClose={handleCloseImage} maxWidth="md" disablePortal>
+                      <DialogContent>
+                        <img
+                          src={`data:image/jpeg;base64,${selectedImage}`}
+                          alt="Imagen ampliada"
+                          style={{ width: '300px', height: 'auto', borderRadius: '8px' }}
+                        />
+                      </DialogContent>
+                    </Dialog>
                   </>
                 ) : (
                   <div className="mt-4 space-y-6">

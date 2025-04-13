@@ -1,9 +1,35 @@
-import React, { forwardRef, useEffect } from 'react';
-import './Bauncher3.css';
-import useApi from '../../hooks/useApi';
-import source_link from '../../repositori/source_repo';
+interface InfoProps {
+  bulto: number;
+  peso: string;
+  envia: string;
+  direccion_envia: string;
+  ciudad_envia: string;
+  identif_envia: string;
+  telefono_envia: string;
+  recibe: string;
+  direccion_recibe: string;
+  ciudad_recibe: string;
+  region: string;
+  codigo_postal: string;
+  telefono_recibe: string;
+  identif_recibe: string;
+  descripcion: string[];
+  contenido: string;
+  codigo: string;
+  atendido: string;
+  oficina: string;
+  tipo: string;
+}
 
-const Bauncher3 = forwardRef(({ info,setInfo }, ref) => {
+interface Bauncher3Props {
+  info: InfoProps;
+}
+import { forwardRef } from "react";
+
+import './Bauncher3.css';
+
+
+const Bauncher3 = forwardRef<HTMLDivElement, Bauncher3Props>(({ info }, ref) => {
   
 
 

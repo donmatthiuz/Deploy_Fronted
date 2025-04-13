@@ -1,15 +1,28 @@
 import { useState, useEffect, createContext, useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { ReactNode } from "react";
+
+type Props = {
+  children: ReactNode;
+};
+
+type CodigoContextType = {
+  codigo: string | null;
+  setCodigo: React.Dispatch<React.SetStateAction<string | null>>;
+  isCodigoActivo: boolean;
+  getRawCodigo: () => string | null;
+};
+
 
 // Contexto para el manejo del código
-const CodigoContext = createContext({
-  codigo: '',
-  setCodigo: (_value: any) => {},
+const CodigoContext = createContext<CodigoContextType>({
+  codigo: null,
+  setCodigo: () => {},
   isCodigoActivo: false,
   getRawCodigo: () => null,
 });
 
-const CodigoProvider = ({ children }) => {
+const CodigoProvider = ({ children }: Props) => {
   const [codigo, setCodigo] = useState(
     typeof window !== 'undefined' ? localStorage.getItem('codigo_value') : null
   );

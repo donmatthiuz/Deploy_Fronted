@@ -13,7 +13,7 @@ export default function BasicTables() {
       <PageBreadcrumb pageTitle="Basic Tables" />
       <div className="space-y-6">
         <ComponentCard title="Basic Table 1">
-          <BasicTableOne />
+          <BasicTableOne fecha_inicio={""} fecha_fin={""} />
         </ComponentCard>
       </div>
     </>

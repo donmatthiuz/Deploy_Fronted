@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
-import Checkbox from "../form/input/Checkbox";
+
 import Button from "../ui/button/Button";
 import useApi from "../../hooks/useApi";
 import source_link from "../../repositori/source_repo";
-import { object, string, number, array } from 'yup';
+import { object, string } from 'yup';
 import useForm from "../../hooks/useForm";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router";
@@ -25,11 +25,10 @@ export default function SignInForm() {
   const { setToken } = useToken();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
   const { llamado: login } = useApi(`${source_link}/login`);
 
 
-  const { values, setValue, validate, errors } = useForm(schema, { 
+  const { values, setValue } = useForm(schema, { 
     password: '',
     usuario: '',
   });
@@ -38,14 +37,14 @@ export default function SignInForm() {
     setValue(name, value);
   };
 
-  const login_to = async(event: React.FormEvent) => {
-    event.preventDefault();
+  const login_to = async (e: React.FormEvent<HTMLFormElement>)  => {
+    e.preventDefault();
     const body = {
       usuario: values.usuario,
       password: md5(values.password)
       };
     
-    console.log(body)
+   
     const response = await login(body, 'POST');
     console.log(response)  
 
@@ -144,7 +143,7 @@ export default function SignInForm() {
                   <Button 
                     className="w-full" 
                     size="sm"
-                    onClick={login_to}>
+                    onClick={(e: FormEvent<HTMLFormElement>) => login_to(e as React.FormEvent<HTMLFormElement>)}>
                     Iniciar Sesion
                   </Button>
                 </div>

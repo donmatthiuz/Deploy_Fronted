@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table"
 import Button from "../ui/button/Button";
 import { Item } from "../../pages/ManifiestoPage/ManifiestoPage";
 import Checkbox from "../form/input/Checkbox";
-import {DeleteIcon, PrintIcon}  from "../../icons"
+import {DeleteIcon}  from "../../icons"
 
 interface BasicTableMultiProps {
   tableData: Item[];
@@ -16,7 +16,7 @@ interface BasicTableMultiProps {
 
 }
 
-export default function BasicTableMulti({ tableData, setTableData, addBulto, addSameBulto , setUseSameID, useSameID}: BasicTableMultiProps) {
+export default function BasicTableMulti({ tableData, setTableData, addBulto , setUseSameID, useSameID}: BasicTableMultiProps) {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   
 
@@ -34,18 +34,10 @@ export default function BasicTableMulti({ tableData, setTableData, addBulto, add
     const selectedItems = tableData.filter((item) => selectedRows.includes(item.id));
     if (selectedItems.length === 0) return;
     addBulto(selectedItems);
-    setT2
-    ableData(tableData.filter((item) => !selectedRows.includes(item.id)));
-    setSelectedRows([]);
-  };
-
-  const handleSameAddBulto = () => {
-    const selectedItems = tableData.filter((item) => selectedRows.includes(item.id));
-    if (selectedItems.length === 0) return;
-    addSameBulto(selectedItems);
     setTableData(tableData.filter((item) => !selectedRows.includes(item.id)));
     setSelectedRows([]);
   };
+
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">

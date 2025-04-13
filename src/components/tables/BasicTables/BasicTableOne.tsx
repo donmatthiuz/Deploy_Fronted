@@ -6,7 +6,7 @@ import {
   TableRow,
 } from "../../ui/table";
 
-import Badge from "../../ui/badge/Badge";
+
 import { useEffect, useState } from "react";
 import useApi from "../../../hooks/useApi";
 import source_link from "../../../repositori/source_repo";

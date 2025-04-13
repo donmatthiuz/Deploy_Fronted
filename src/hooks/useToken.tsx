@@ -1,5 +1,14 @@
-import { useState, useEffect, createContext, useContext, useMemo } from 'react';
+import { useState, useEffect, createContext, useContext, useMemo, ReactNode } from 'react';
 import PropTypes from 'prop-types';
+type Props = {
+  children: ReactNode;
+};
+type TokenContextType = {
+  token: string | null;
+  setToken: React.Dispatch<React.SetStateAction<string | null>>;
+  isLoggedIn: boolean;
+  getRawToken: () => any; // Puedes tipar mejor si sabes qué datos devuelve tu JWT
+};
 
 // Función para decodificar un JWT de forma segura
 function parseJwt(token: string | null) {
@@ -21,14 +30,14 @@ function parseJwt(token: string | null) {
 }
 
 // Contexto para el manejo del token
-const TokenContext = createContext({
-  token: '',
-  setToken: (_value: any) => {},
+const TokenContext = createContext<TokenContextType>({
+  token: null,
+  setToken: () => {},
   isLoggedIn: false,
   getRawToken: () => null,
 });
 
-const TokenProvider = ({ children }) => {
+const TokenProvider =  ({ children }: Props) => {
   const [token, setToken] = useState(
     typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
   );

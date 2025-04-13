@@ -1,9 +1,39 @@
-import React, { forwardRef, useEffect } from 'react';
+import { forwardRef } from 'react';
 import './Bauncher.css';
-import useApi from '../../hooks/useApi';
-import source_link from '../../repositori/source_repo';
 
-const Bauncher = forwardRef(({ info,setInfo }, ref) => {
+
+// types.ts
+export interface InfoProps {
+  envia: string;
+  direccion_envia: string;
+  ciudad_envia?: string;
+  identif_envia?: string;
+  telefono_envia?: string;
+  recibe: string;
+  direccion_recibe: string;
+  ciudad_recibe?: string;
+  region?: string;
+  codigo_postal?: string;
+  telefono_recibe?: string;
+  identif_recibe?: string;
+  descripcion?: string[];
+  contenido: string;
+  codigo: string;
+  atendido?: string;
+  oficina?: string;
+  monto?: number;
+  tipo?: string;
+  bulto?: number;
+  peso?: string;
+}
+
+
+
+interface BauncherProps {
+  info: InfoProps;
+}
+
+const Bauncher =  forwardRef<HTMLDivElement, BauncherProps>(({ info }, ref) => {
   
 
 
@@ -240,16 +270,17 @@ const Bauncher = forwardRef(({ info,setInfo }, ref) => {
           <tbody>
             <tr>
             <td className='paquete'>
-              {info?.descripcion?.length > 0 ? (
-                info.descripcion.map((item, index) => (
-                  <span key={index}>
-                    {item}
-                    <br />
-                  </span>
-                ))
-              ) : (
-                "\u2063"
-              )}
+            {Array.isArray(info?.descripcion) && info.descripcion.length > 0 ? (
+              info.descripcion.map((item, index) => (
+                <span key={index}>
+                  {item}
+                  <br />
+                </span>
+              ))
+            ) : (
+              "\u2063"
+            )}
+
             </td>
 
               <td className='contenido' style={{height: '90px'}}>{info?.contenido?.toUpperCase() || ''}</td>

@@ -1,9 +1,25 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from "react";
 import './Bauncher2.css';
 
-const Bauncher2 = forwardRef(({ info }, ref) => {
-  const fecha = new Date();
-  const fechaFormateada = fecha.toLocaleDateString();
+
+interface InfoProps {
+  envia: string;
+  direccion_envia: string;
+  recibe: string;
+  direccion_recibe: string;
+  contenido: string;
+  codigo: string;
+  tipo: string;
+}
+
+interface Bauncher2Props {
+  info: InfoProps;
+}
+
+
+
+const Bauncher2 = forwardRef<HTMLDivElement, Bauncher2Props>(({ info }, ref) => {
+  
 
   return (
     <div className='recuadro2' ref={ref}>

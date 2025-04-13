@@ -22,13 +22,13 @@ const getWeekRange = () => {
   endDate.setDate(startDate.getDate() + 6);
 
   // Formatear las fechas
-  const formatDate = (date) => date.toLocaleDateString("es-ES", {
+  const formatDate = (date: Date) => date.toLocaleDateString("es-ES", {
     day: "2-digit",
     month: "long",
     year: "numeric"
   });
 
-  const formatISODate = (date) => date.toISOString().split('T')[0];
+  const formatISODate = (date: Date) => date.toISOString().split('T')[0];
 
   const fecha_inicio = formatISODate(startDate);
   const fecha_fin = formatISODate(endDate);
@@ -60,7 +60,7 @@ export default function Packages_Send() {
         <ComponentCard title={`Semana: ${range}`}>
           <Modal isOpen={isModalOpen} onClose={closeModal} showCloseButton={true}>
             <div>
-              <Insert_Packages open={undefined} handleClose={closeModal} />
+              <Insert_Packages open={true} handleClose={closeModal} />
             </div>
           </Modal>
 
