@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
 import Button from "../ui/button/Button";
-import { Item } from "../../pages/ManifiestoPage/ManifiestoPage";
+import { Item, Item_Bulto } from "../../pages/ManifiestoPage/ManifiestoPage";
 import Checkbox from "../form/input/Checkbox";
 import {DeleteIcon}  from "../../icons"
+import Input from "../form/input/InputField";
+import Label from "../form/Label";
 
 interface BasicTableMultiProps {
   tableData: Item[];
@@ -12,11 +14,13 @@ interface BasicTableMultiProps {
   addSameBulto: (items: Item[]) => void;
   setUseSameID: (value: boolean) => void;
   useSameID: boolean;
+  handleAtiende: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  atiende: string;
 
 
 }
 
-export default function BasicTableMulti({ tableData, setTableData, addBulto , setUseSameID, useSameID}: BasicTableMultiProps) {
+export default function BasicTableMulti({ tableData, setTableData, addBulto , setUseSameID, useSameID, atiende, handleAtiende}: BasicTableMultiProps) {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   
 
@@ -34,7 +38,7 @@ export default function BasicTableMulti({ tableData, setTableData, addBulto , se
     const selectedItems = tableData.filter((item) => selectedRows.includes(item.id));
     if (selectedItems.length === 0) return;
     addBulto(selectedItems);
-    setTableData(tableData.filter((item) => !selectedRows.includes(item.id)));
+    //setTableData(tableData.filter((item) => !selectedRows.includes(item.id)));
     setSelectedRows([]);
   };
 
@@ -45,11 +49,25 @@ export default function BasicTableMulti({ tableData, setTableData, addBulto , se
         <span className="text-lg font-semibold text-gray-800 dark:text-white">
           Peso Total: {totalPeso} lbs
         </span>
+        <div style={{display: 'flex', flexDirection: 'column' }}>
+        <Label htmlFor="codigo">Nombre de quien atendio</Label>
+        <Input 
+                  type="text" 
+                  id="codigomio"
+                  onChange={handleAtiende}
+                  value={atiende}
+                  name="codigomio"
+                
+                />
+
+
+        </div>
+
         <Checkbox 
           checked={useSameID} 
           onChange={setUseSameID}
           label="Seguir secuencia" />
-
+  
 
         <Button size="sm" onClick={handleAddBulto}>
           Agregar Bulto
@@ -81,6 +99,7 @@ export default function BasicTableMulti({ tableData, setTableData, addBulto , se
                       className="cursor-pointer"
                     />
                   </TableCell>
+                  
                   <TableCell className="w-1/5 text-center">{item.codigo}</TableCell>
                   <TableCell className="w-1/5 text-center">{item.contenido}</TableCell>
                   <TableCell className="w-1/5 text-center">{item.peso}</TableCell>
@@ -95,8 +114,12 @@ export default function BasicTableMulti({ tableData, setTableData, addBulto , se
   );
 }
 
+interface BultosTableProps {
+  bultos: Item_Bulto[];
+  delete_id_bulto: (id: number) => void;
+}
 
-export function BultosTable({ bultos }: { bultos: { id: number; numeroBulto: number; codigo: string; descripcion: string; peso: number; tipo: string }[] }) {
+export function BultosTable({ bultos, delete_id_bulto }: BultosTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] mt-6">
       <div className="p-4 bg-gray-100 dark:bg-gray-800 flex justify-between items-center">
@@ -136,15 +159,24 @@ export function BultosTable({ bultos }: { bultos: { id: number; numeroBulto: num
           </TableHeader>
             <TableBody>
               {bultos.map((bulto) => (
-                <TableRow key={`${bulto.numeroBulto}`}>
-                  <TableCell className="w-1/5 text-center">{bulto.numeroBulto}</TableCell>
+                <TableRow key={`${bulto.id}`}>
+                  
+                  <TableCell className="w-1/5 text-center">{bulto.id}</TableCell>
                   <TableCell className="w-1/5 text-center">{bulto.codigo}</TableCell>
-                  <TableCell className="w-1/5 text-center">{bulto.descripcion}</TableCell>
+                  <TableCell className="w-1/5 text-center">{bulto.contenido}</TableCell>
                   <TableCell className="w-1/5 text-center">{bulto.peso}</TableCell>
                   <TableCell className="w-1/5 text-center">{bulto.tipo}</TableCell>
  
                   <TableCell className="w-1/5 text-center">
-                  <Button size="sm"  variant="outline"  onClick={() => { } } startIcon={<DeleteIcon />} children={undefined}>  
+                  <Button size="sm"  variant="outline"    
+                    onClick={() => {
+                      if (bulto.id_real != null) {
+                        delete_id_bulto(bulto.id_real);
+                      }
+                    }}
+                    
+
+                    startIcon={<DeleteIcon />} children={undefined}>  
                   </Button>
                   </TableCell>
                 </TableRow>

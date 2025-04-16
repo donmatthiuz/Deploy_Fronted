@@ -15,30 +15,75 @@ import { Modal } from "../../components/ui/modal";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Swal from "sweetalert2";
+import { DeleteIcon, EditIcon } from "../../icons";
 
 
 export interface Item {
+  id_real?: number | null;
   id: number;
   codigo: string;
   contenido: string;
   peso: number;
+  pesoKilos: number;
   tipo: string;
-  id_real?: number | null;
+  
+  
+  nombre_cliente_envia: string;
+  direccion_cliente_envia: number;
+  telefono_cliente_envia: string;
+
+  nombre_cliente_recibe: string;
+  direccion_cliente_recibe: number;
+  telefono_cliente_recibe: string;
+
 }
+
+
+export interface Item_Bulto {
+  id_real?: number | null;
+  id: number;
+  codigo: string;
+  contenido: string;
+  peso: number;
+  pesoKilos: number;
+  tipo: string;
+  
+  
+  envia: string;
+  direccionenvia: number;
+  telefonoenvia: string;
+
+  nombrerecibe: string;
+  direccionrecibe: number;
+  telefonorecibe: string;
+}
+
 
 export default function ManifiestoPage() {
 
   const { llamado: traducir } = useApi(`${source_link}/translate`);
 
+  const { llamado: removerBultoManifiesto } = useApi(`${source_link}/removerBultoManifiesto`);
+
+
+  const {llamado: insertarBulto} = useApi(`${source_link}/insertarBulto`)
+
   const { llamado: getPaquetedata } = useApi(`${source_link}/getPaquetedata`);
+
+  const { llamado: getBultos_Manifiesto } = useApi(`${source_link}/getBultos_Manifiesto`);
+
+  const { llamado: insertar_numero_guia } = useApi(`${source_link}/insertar_numero_guia`);
   
   const {codigo,setCodigo} = useCodigo();
 
   const [useSameID, setUseSameID] = useState(false);
+
   
 
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+
 
   const closeModal = () => setIsModalOpen(false);
 
@@ -59,7 +104,7 @@ export default function ManifiestoPage() {
     const data_bultos = await Promise.all(bultos.map(async (bulto) => {
 
       const body = {
-            text: bulto.descripcion,
+            text: bulto.contenido,
             sourceLang: "es",
             targetLang: "en"
       };
@@ -80,7 +125,7 @@ export default function ManifiestoPage() {
       const direnvia = resultado_data.response.envia.direccion.toUpperCase();
       const dirrerecibe = resultado_data.response.recibe.direccion.toUpperCase();
       const consigntelephone = resultado_data.response.recibe.telefono;
-      console.log(bulto.descripcion)
+      
       return {
         "SITEID": 23,
         "WAYBILLORIGINATOR":"F703",
@@ -508,18 +553,31 @@ export default function ManifiestoPage() {
 
   const [tableData_frios, setTableDataFrios] = useState<Item[]>([]);
   const [tableData_secos, setTableDataSecos] = useState<Item[]>([]);
-  const [bultos, setBultos] = useState<{ id: number; numeroBulto: number; codigo: string; descripcion: string; peso: number; tipo: string, id_real: number | null; }[]>([]);
+
+
+
+  const [atiende, setAtiende] = useState('')
+
+  const [bultos, setBultos] = useState<Item_Bulto[]>([]);
   const { llamado: obtener_paquetes_fecha_paquete } = useApi(`${source_link}/obtener_paquetes_fecha_tipo`);
   const [codigomio, setCodigomio] = useState('')
+  const [reload, setReload] = useState(false);
+
+  const [peso_Total, setPesoTotal] = useState(0)
 
   const handleChangeGuia = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setCodigomio(value)
   }; 
 
-  const [bultoCounter] = useState(1);
+  const handleAtiende = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setAtiende(value)
+  }; 
 
-  const getWeekRange = () => {
+  
+
+  const getWeekRange = () => { 
     const today = new Date();
     const dayOfWeek = today.getDay();
     const startDate = new Date(today);
@@ -534,95 +592,186 @@ export default function ManifiestoPage() {
     };
   };
 
+  function obtenerIndiceItemTotalmenteUnico(items: Item[], bultos: Item_Bulto[]): number | null {
+    const codigosBultos = new Set(bultos.map(b => b.codigo));
+    const telefonosEnvia = new Set(bultos.map(b => b.telefonoenvia));
+    const telefonosRecibe = new Set(bultos.map(b => b.telefonorecibe));
+    const nombresEnvia = new Set(bultos.map(b => b.envia));
+    const nombresRecibe = new Set(bultos.map(b => b.nombrerecibe));
+  
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (
+        !codigosBultos.has(item.codigo) &&
+        !telefonosEnvia.has(item.telefono_cliente_envia) &&
+        !telefonosRecibe.has(item.telefono_cliente_recibe) &&
+        !nombresEnvia.has(item.nombre_cliente_envia) &&
+        !nombresRecibe.has(item.nombre_cliente_recibe)
+      ) {
+        return i;
+      }
+    }
+  
+    return 0;
+  }
+  
+
+  
   const { range, fecha_inicio, fecha_fin } = getWeekRange();
 
   useEffect(() => {
-    if (codigo=='' ){
+    if (codigo=='' || codigo == null ){
       setIsModalOpen(true)
      }
-   
+     
+    
     const get_frios = async () => {
       const body_frio = { fecha_inicio, fecha_fin, tipo: "Frio" };
       const body_seco = { fecha_inicio, fecha_fin, tipo: "Seco" };
       const response = await obtener_paquetes_fecha_paquete(body_frio, "POST");
       const response2 = await obtener_paquetes_fecha_paquete(body_seco, "POST");
+      const butos_body = {numero_guia: codigo}
+      const reposne_bultos = await getBultos_Manifiesto(butos_body,"POST");
+      
+      
+
+     
+      
+      setBultos(reposne_bultos.response.bultos);
+      setPesoTotal(reposne_bultos.response.totalKilos)
+      
       setTableDataFrios(response.response);
       setTableDataSecos(response2.response);
+
 
       console.log(response)
     };
     get_frios();
-  }, []);
+  }, [reload]);
 
-  const addBulto = (items: Item[]) => {
+  const addBulto = async (items: Item[]) => {
+    const index = obtenerIndiceItemTotalmenteUnico(items, bultos);
+
+
     if (items.length === 0) return;
-    const codigo = items[0].codigo;
-    const id_real = items[0].id; // ✅ Se asigna el id del primer item
+    let indice = 0
+    if (index != null) {
+
+      indice = index
+
+    }
+    const codigo_ = items[indice].codigo;
     const descripcion = items.map(item => item.contenido).join(", ");
     const peso = items.reduce((sum: number, item) => sum + (parseFloat(item.peso?.toString()) || 0), 0);
 
 
+    
 
-    const tipo = items[0].tipo;
+    const direcciones_ids = [
+      ...bultos.map(item => item.direccionenvia),
+      ...bultos.map(item => item.direccionrecibe)
+    ];
+    
+    const ids_todos = items.map(item => item.id)
+
+
+    const tipo = items[indice].tipo;
+    const envia = items[indice].nombre_cliente_envia;
+    const recibe = items[indice].nombre_cliente_recibe;
+
+    const direccion_envia = items[indice].direccion_cliente_envia;
+    const direccion_recibe = items[indice].direccion_cliente_recibe;
+
+    const telefono_envia = items[indice].telefono_cliente_envia;
+    const telefono_recibe = items[indice].telefono_cliente_recibe;
+
+
+    let last_idBulto = bultos.length > 0 ? Math.max(...bultos.map(b => b.id)) : 0;
 
     if (!useSameID){
-      const lastId = bultos.length > 0 ? Math.max(...bultos.map(b => b.id)) : 0;
-      const lastNumeroBulto = bultos.length > 0 ? Math.max(...bultos.map(b => b.numeroBulto)) : 0;
+      last_idBulto += 1;
+    }
+    const body = {
+      codigo_manifiesto: codigo,
+      bulto:  last_idBulto,
+      codigo: codigo_,
+      pesolb: peso,
+      tipo : tipo,
+      contenidoes: descripcion,
+      envia: envia,
+      direccionenvia: direccion_envia,
+      telefonoenvia: telefono_envia,
+      nombrerecibe: recibe,
+      telefonorecibe: telefono_recibe,
+      direccionrecibe: direccion_recibe,
+      atendido: atiende,
+      direcciones_todas: direcciones_ids,
+      id_frios_secos : ids_todos
 
-      setBultos([
-        ...bultos,
-        {
-          id: lastId + 1,
-          numeroBulto: lastNumeroBulto + 1,
-          codigo,
-          descripcion,
-          peso,
-          tipo,
-          id_real
-        }
-      ]);
 
-      //setBultoCounter(bultoCounter + 1);
+    }
+
+    const response = await insertarBulto(body, "POST");
+
+    if (!response.success){
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al insertar los codigos',
+        text: 'No es posible insertar el bulto',
+        confirmButtonText: 'Aceptar'
+      });
+
+
     }else{
-      const lastId = bultos.length > 0 ? Math.max(...bultos.map(b => b.id)) : 0;
-      const lastNumeroBulto = bultos.length > 0 ? Math.max(...bultos.map(b => b.numeroBulto)) : 0;
-
-      setBultos([
-        ...bultos,
-        {
-          id: lastId,
-          numeroBulto: lastNumeroBulto,
-          codigo,
-          descripcion,
-          peso,
-          tipo,
-          id_real
-        }
-      ]);
-      //setBultoCounter(bultoCounter);
+      
+      setReload(prev => !prev);
     }
 
   };
 
-  const add_Codigo = () =>{
+  const add_Codigo = async () =>{
 
     setCodigo(codigomio)
-    closeModal();
+
+    const body = {
+      numero_guia: codigomio
+    }
+    const response = await insertar_numero_guia(body, "POST")
+
+    if (response.numero_guia == codigomio || response){
+      closeModal();
+      setReload(prev => !prev);
+    }else{
+      closeModal();
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al insertar codigo',
+        text: 'No es posible insertar el codigo de manera exitosa',
+        confirmButtonText: 'Aceptar'
+      });
+    }
+    
+
   }
 
-  const addSameBulto = (items: Item[]) => {
-    if (items.length === 0) return;
-    const codigo = items[0].codigo;
-    const descripcion = items.map(item => item.contenido).join(", ");
-    const peso = items.reduce((sum: number, item) => sum + (parseFloat(item.peso?.toString()) || 0), 0);
-    const tipo = items[0].tipo;
 
-    setBultos([...bultos, { id: bultos.length + 1, numeroBulto: bultoCounter, codigo, descripcion, peso, tipo ,   id_real: null}]);
+
+  const addSameBulto = (items: Item[]) => {
+
   };
 
+
+  const delete_id_bulto = async (id:number) => {
+
+    const body = {
+      id_bulto: id
+    }
+    await removerBultoManifiesto(body, "DELETE");
+    setReload(prev => !prev);
+  }
+
   // Calcular el peso total de los bultos en libras y convertir a kilos
-  const totalPesoLibras = bultos.reduce((sum, bulto) => sum + bulto.peso, 0);
-  const totalPesoKilos = totalPesoLibras * 0.453592; // 1 libra = 0.453592 kg
+ 
 
   return (
     <>
@@ -651,8 +800,21 @@ export default function ManifiestoPage() {
         title={`${PAGE_NAME} - Manifiesto`}
         description="Esta es la página de tablas básicas para el Dashboard de TailAdmin en React.js y Tailwind CSS"
       />
-      <PageBreadcrumb pageTitle={`Manifiesto 202 - ${codigo}  |   Semana: ${range}`} />
+
+      <div style={{flexDirection: 'row', display: 'flex', gap: '2rem'}}>
+
+      <h1 style={{fontSize: '1.3rem'}}>Manifiesto Segun Guia 202 - {codigo} </h1>
+      <Button size="sm"  variant="outline"  onClick={() => setIsModalOpen(true)} startIcon={<EditIcon />} children={undefined}>  
+      </Button>
+      </div>
       
+      
+      <div>
+        <h1 style={{fontSize: '1.3rem'}}>Semana {range} </h1>
+      </div>
+      <br/>
+
+
 
       
       <div className="space-y-6">
@@ -660,17 +822,21 @@ export default function ManifiestoPage() {
               <Button size="sm" onClick={exportToExcel}>
               Descargar Manifiestos
                 </Button>
-                <PageBreadcrumb pageTitle={`Total: ${totalPesoKilos.toFixed(2)}KG`} />
+                <PageBreadcrumb pageTitle={`Total: ${peso_Total.toFixed(2)}KG`} />
         <ComponentCard title="Bultos">
 
-          <BultosTable bultos={bultos} />
+          <BultosTable 
+            bultos={bultos}
+            delete_id_bulto={delete_id_bulto} />
         </ComponentCard>
         <ComponentCard title="Frios">
           <BasicTableMulti 
           tableData={tableData_frios} 
           setTableData={setTableDataFrios} 
           addBulto={addBulto} 
-          addSameBulto={addSameBulto} 
+          addSameBulto={addSameBulto}
+          handleAtiende={handleAtiende}
+          atiende ={atiende}
           useSameID={useSameID}
           setUseSameID={setUseSameID}/>
         </ComponentCard>
@@ -679,6 +845,8 @@ export default function ManifiestoPage() {
             tableData={tableData_secos} 
             setTableData={setTableDataSecos} 
             addBulto={addBulto} 
+            handleAtiende={handleAtiende}
+          atiende ={atiende}
             addSameBulto={addSameBulto}
             useSameID={useSameID}
             setUseSameID={setUseSameID} />
