@@ -15,8 +15,62 @@ import { Modal } from "../../components/ui/modal";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Swal from "sweetalert2";
-import { DeleteIcon, EditIcon } from "../../icons";
+import { EditIcon } from "../../icons";
+import TextArea from "../../components/form/input/TextArea";
+import { object, string, number } from 'yup';
+import useForm from "../../hooks/useForm";
+import Checkbox from "../../components/form/input/Checkbox";
 
+
+
+interface Direccion {
+  id: number;
+  direccion: string;
+  ciudad: string;
+  estado: string;
+  postal: string;
+  pais_id: number;
+}
+
+interface Bulto {
+  id_real: number;
+  id: number;
+  codigo: string;
+  contenido: string;
+  peso: string;
+  pesoKilos: string;
+  tipo: string;
+  envia: string;
+  direccionenvia: number;
+  telefonoenvia: string;
+  nombrerecibe: string;
+  telefonorecibe: string;
+  direccionrecibe: number;
+  envia_direccion: Direccion;
+  recibe_direccion: Direccion;
+  costodolares: number;
+}
+
+
+const schma_insert = object({
+ 
+  codigo_manifiesto: string(),
+  bulto: number(),
+  codigo: string(),
+  pesolb: number(),
+  tipo: string(),
+  contenidoes: string(),
+  envia: string(),
+  direccionenvia: string(),
+  telefonoenvia: string(),
+  nombrerecibe: string(),
+  telefonorecibe: string(),
+  direccionrecibe: string(),
+  atendido: string(),
+ 
+
+
+})
 
 export interface Item {
   id_real?: number | null;
@@ -59,14 +113,52 @@ export interface Item_Bulto {
 }
 
 
+
 export default function ManifiestoPage() {
 
-  const { llamado: traducir } = useApi(`${source_link}/translate`);
+
+ 
+
+  const contarTiposBultos = (bultos: Bulto[]) => {
+    const idsUnicos = new Set<number>();
+    let seco = 0;
+    let frio = 0;
+  
+    for (const bulto of bultos) {
+      if (!idsUnicos.has(bulto.id)) {
+        idsUnicos.add(bulto.id);
+  
+        const tipo = bulto.tipo.trim().toLowerCase();
+        if (tipo === "seco") seco++;
+        else if (tipo === "frio") frio++;
+      }
+    }
+  
+    return {
+      total: idsUnicos.size,
+      seco,
+      frio
+    };
+  }
+
+
+  const handleChange_useForm = (e:any) => {
+    const { name, value } = e.target;
+    setValue(name, value);
+  };
+  
+
+  
 
   const { llamado: removerBultoManifiesto } = useApi(`${source_link}/removerBultoManifiesto`);
 
 
   const {llamado: insertarBulto} = useApi(`${source_link}/insertarBulto`)
+
+  const {llamado: obtenerNombreAleatorio} = useApi(`${source_link}/obtenerNombreAleatorio`)
+
+  const {llamado: obtener_telefono_aleatoria} = useApi(`${source_link}/obtener_telefono_aleatoria`)
+
 
   const { llamado: getPaquetedata } = useApi(`${source_link}/getPaquetedata`);
 
@@ -78,14 +170,40 @@ export default function ManifiestoPage() {
 
   const [useSameID, setUseSameID] = useState(false);
 
+
+  const [frio, setFrio] = useState(false)
+  const [seco, setSeco] = useState(false)
+
+  const [usa, setUsa] = useState(false)
+  const [gt, setGT] = useState(true)
   
 
 
+  const { values, setValue } = useForm(schma_insert, { 
+    codigo_manifiesto: codigo,
+    bulto: 0,
+    codigo: '',
+    pesolb: 0,
+    tipo: '',
+    contenidoes: '',
+    envia: '',
+    direccionenvia: '',
+    telefonoenvia: '',
+    nombrerecibe: '',
+    telefonorecibe: '',
+    direccionrecibe: '',
+    atendido: '',
+  });
+
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen2, setIsModalOpen2] = useState(false);
+
 
 
 
   const closeModal = () => setIsModalOpen(false);
+  const closeModal2 = () => setIsModalOpen2(false);
 
 
   
@@ -99,32 +217,24 @@ export default function ManifiestoPage() {
       });
       return;
     }
+
+
+    const bultos_manifiesto = await obtener_manifiesto({
+      id_number: "All",
+      numero_guia: codigo
+    },"POST")
+
+    
   
     // Map data_bultos from bultos
-    const data_bultos = await Promise.all(bultos.map(async (bulto) => {
+    const data_bultos = await Promise.all(bultos_manifiesto.response.map(async (bulto: Bulto) => {
 
-      const body = {
-            text: bulto.contenido,
-            sourceLang: "es",
-            targetLang: "en"
-      };
-
-      const bodydata = {
-        idPaquete:bulto.id_real
-      }
+      
       
 
-      const resultado = await traducir(body, "POST");
-
-      const resultado_data = await getPaquetedata(bodydata, "POST");
-
-
-      const descripcionTraducida = resultado.translatedText.toUpperCase();
-      const nombreenvia = resultado_data.response.envia.nombre.toUpperCase();
-      const nombrerecibe = resultado_data.response.recibe.nombre.toUpperCase();
-      const direnvia = resultado_data.response.envia.direccion.toUpperCase();
-      const dirrerecibe = resultado_data.response.recibe.direccion.toUpperCase();
-      const consigntelephone = resultado_data.response.recibe.telefono;
+     
+      // const dirrerecibe = resultado_data.response.recibe.direccion.toUpperCase();
+      
       
       return {
         "SITEID": 23,
@@ -143,23 +253,23 @@ export default function ManifiestoPage() {
         "Origen": "GUA",
         "DESTINO": "JFK",
         "PIEZAS": "1",
-        "PESO": (bulto.peso * 0.453592).toFixed(2),
-        "NOMBRE DEL SHIPPER": nombreenvia,
-        "DIRECCION 1 SHIPPER": dirrerecibe,
-        "CIUDAD SHIPPER": "",
-        "ESTADO REGION": "GT",
-        "PAIS": "GT",
+        "PESO": bulto.pesoKilos,
+        "NOMBRE DEL SHIPPER": bulto.envia.toUpperCase(),
+        "DIRECCION 1 SHIPPER": bulto.envia_direccion.direccion,
+        "CIUDAD SHIPPER": bulto.envia_direccion.ciudad,
+        "ESTADO REGION": bulto.envia_direccion.estado,
+        "PAIS": bulto.envia_direccion.pais_id == 1 ? "GT" : "USA",
         "CODIGO POSTAL": "",
-        "NOMBRE DEL CONSIGNATARIO": nombrerecibe,
-        "DIRECCION CONSIGNATARIO": direnvia,
-        "CIUDAD CONSIGN": "",
-        "ESTADO": "",
-        "PAIS CONSIGN": "USA",
-        "CODIGO POSTAL CONSIGN": "",
-        "DESCRIPCION DE LA CARGA": descripcionTraducida || "", // Si la traducción falla, se coloca un string vacío
+        "NOMBRE DEL CONSIGNATARIO": bulto.nombrerecibe.toUpperCase(),
+        "DIRECCION CONSIGNATARIO": bulto.recibe_direccion.direccion,
+        "CIUDAD CONSIGN": bulto.recibe_direccion.ciudad,
+        "ESTADO": bulto.recibe_direccion.estado,
+        "PAIS CONSIGN": bulto.recibe_direccion.pais_id == 2 ? "USA" : "GT",
+        "CODIGO POSTAL CONSIGN": bulto.recibe_direccion.postal,
+        "DESCRIPCION DE LA CARGA": bulto.contenido.toUpperCase() || "", // Si la traducción falla, se coloca un string vacío
         "BAG": bulto.id,
-        "CONSIGNEETELEPHONE": consigntelephone,
-        "CUSTOMSVALUE":  Math.ceil(bulto.peso / 10) + 6,
+        "CONSIGNEETELEPHONE": bulto.telefonorecibe,
+        "CUSTOMSVALUE":  bulto.costodolares,
       };
     }));
   
@@ -554,12 +664,18 @@ export default function ManifiestoPage() {
   const [tableData_frios, setTableDataFrios] = useState<Item[]>([]);
   const [tableData_secos, setTableDataSecos] = useState<Item[]>([]);
 
+  const [bultos_geted , setBultosGeted] = useState<Bulto[]>([])
+
+
 
 
   const [atiende, setAtiende] = useState('')
 
   const [bultos, setBultos] = useState<Item_Bulto[]>([]);
   const { llamado: obtener_paquetes_fecha_paquete } = useApi(`${source_link}/obtener_paquetes_fecha_tipo`);
+
+  const { llamado: obtener_manifiesto } = useApi(`${source_link}/obtener_manifiesto`);
+
   const [codigomio, setCodigomio] = useState('')
   const [reload, setReload] = useState(false);
 
@@ -714,6 +830,7 @@ export default function ManifiestoPage() {
     const response = await insertarBulto(body, "POST");
 
     if (!response.success){
+      closeModal2()
       Swal.fire({
         icon: 'error',
         title: 'Error al insertar los codigos',
@@ -728,6 +845,80 @@ export default function ManifiestoPage() {
     }
 
   };
+
+  const enviar_pedido =  async() => {
+
+    let tipo_ = ''
+
+    let direcciones_envua_ = 'GT'
+    let direcciones_recibe_ = 'USA'
+
+    if (seco){
+      tipo_ = 'Seco'
+    }else if(frio){
+      tipo_ = 'Frio'
+    }
+
+    if(usa){
+      direcciones_envua_ = 'USA'
+      direcciones_recibe_ = 'GT'
+    }else if (gt){
+      direcciones_envua_ = 'GT'
+      direcciones_recibe_ = 'USA'
+    }
+    
+    const body = {
+      codigo_manifiesto: codigo,
+      bulto:  values.bulto,
+      codigo: values.codigo,
+      pesolb: values.pesolb,
+      tipo : tipo_,
+      contenidoes: values.contenidoes,
+      envia: values.envia,
+      direccionenvia: direcciones_envua_,
+      telefonoenvia: '',
+      nombrerecibe: values.nombrerecibe,
+      telefonorecibe: values.telefonorecibe,
+      direccionrecibe: direcciones_recibe_,
+      atendido: values.atendido,
+      direcciones_todas: [
+        ...bultos.map(item => item.direccionenvia),
+        ...bultos.map(item => item.direccionrecibe)
+      ],
+      id_frios_secos : []
+
+
+    }
+
+
+    const response = await insertarBulto(body, "POST");
+
+    if (!response.success){
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al insertar los codigos',
+        text: 'No es posible insertar el bulto',
+        confirmButtonText: 'Aceptar'
+      });
+
+
+    }else{  
+
+      setValue('codigo', '');
+      setValue('tipo', '');
+      setValue('envia', '');
+      setValue('direccionenvia', '');
+      setValue('telefonoenvia', '');
+      setValue('nombrerecibe', '');
+      setValue('telefonorecibe', '');
+      setValue('direccionrecibe', '');
+
+      
+      setReload(prev => !prev);
+    }
+
+  }
+
 
   const add_Codigo = async () =>{
 
@@ -757,7 +948,7 @@ export default function ManifiestoPage() {
 
 
   const addSameBulto = (items: Item[]) => {
-
+    console.log(items)
   };
 
 
@@ -769,6 +960,72 @@ export default function ManifiestoPage() {
     await removerBultoManifiesto(body, "DELETE");
     setReload(prev => !prev);
   }
+
+
+  const obtener_nombre_envia = async() => {
+    const nombres = [
+      ...bultos.map(item => item.nombrerecibe),
+      ...bultos.map(item => item.envia)
+    ];
+    
+
+
+    const response = await  obtenerNombreAleatorio({
+
+      nombres_excluidos: nombres
+    }, "POST")
+
+    if (response.success){
+      setValue("envia", response.respuesta.id)
+      console.log(response.respuesta.id)
+    }else{
+      setValue("envia", "No tenemos mas nombres")
+    }
+
+  }
+
+  const obtener_nombre_recibe = async() => {
+    const nombres = [
+      ...bultos.map(item => item.nombrerecibe),
+      ...bultos.map(item => item.envia)
+    ];
+    
+
+
+    const response = await  obtenerNombreAleatorio({
+
+      nombres_excluidos: nombres
+    }, "POST")
+
+    if (response.success){
+      setValue("nombrerecibe", response.respuesta.id)
+    }else{
+      setValue("envia", "No tenemos mas nombres")
+    }
+
+  }
+
+  const obtener_telefono =  async (estado_id:number) => {
+    const response  = await obtener_telefono_aleatoria({
+      estado: estado_id,
+      telefonos_excluidos: [
+        ...bultos.map(item => item.telefonoenvia),
+        ...bultos.map(item => item.telefonorecibe)
+      ]
+    }, "POST")
+
+    if (!response.success) {
+
+      setValue("telefonorecibe", "No hay mas telefonos")
+
+    }else{
+      setValue("telefonorecibe", response.respuesta.telefono)
+    }
+
+  }
+
+ 
+  
 
   // Calcular el peso total de los bultos en libras y convertir a kilos
  
@@ -795,6 +1052,167 @@ export default function ManifiestoPage() {
           </ComponentCard>
           </div>
         </Modal>
+
+        <Modal isOpen={isModalOpen2} onClose={closeModal2} showCloseButton={true}>
+  <div>
+    <ComponentCard title="Agregar Nuevo Bulto">
+
+          {/* Numero de Bulto */}
+          <div>
+            <Label htmlFor="bulto">Numero de Bulto</Label>
+            <Input
+              type="number"
+              id="bulto"
+              value={values.bulto}
+              name="bulto"
+              onChange={handleChange_useForm}
+            />
+          </div>
+          {/* Nombre Envia y Nombre Recibe */}
+          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+            {/* Nombre Envia */}
+            <div style={{ flex: 1 }}>
+              <Label>Nombre Envia</Label>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <Input
+                  type="text"
+                  value={values.envia}
+                  name="envia"
+                  onChange={handleChange_useForm}
+                />
+                <Button size="sm" onClick={obtener_nombre_envia}>Obtener Nombre</Button>
+              </div>
+            </div>
+
+            {/* Nombre Recibe */}
+            <div style={{ flex: 1 }}>
+              <Label>Nombre Recibe</Label>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <Input
+                  type="text"
+                  value={values.nombrerecibe}
+                  name="nombrerecibe"
+                  onChange={handleChange_useForm}
+                />
+                <Button size="sm" onClick={obtener_nombre_recibe}>Obtener Nombre</Button>
+              </div>
+            </div>
+            
+          </div>
+
+
+          {/* Teléfono */}
+          <div style={{ display: 'flex', gap: '10rem', flexWrap: 'wrap' }}>
+          <div>
+              <Label>Tipo de Envio:</Label>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <label>
+              <Checkbox
+                checked={gt}
+                onChange={setGT}
+                label=" Guatemala a USA"
+              />
+            </label>
+            <label>
+            <Checkbox
+                checked={usa}
+                onChange={setUsa}
+                label="USA a GT"
+              />
+
+            </label>
+            
+          </div>    
+            </div>
+          <div>
+            <Label>Telefono Recibe</Label>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <Input
+                type="number"
+                value={values.telefonorecibe}
+                name="telefonorecibe"
+                onChange={handleChange_useForm}
+              />
+              <Button size="sm" onClick={()=>obtener_telefono(1)}>Numero M</Button>
+              <Button size="sm" onClick={()=>obtener_telefono(2)}>Numero NY</Button>
+            </div>
+          </div>
+          </div>
+          {/* Contenido */}
+          <div>
+            <Label>Contenido</Label>
+            <TextArea rows={3} 
+              value={values.contenidoes} 
+              onChange={(value) => setValue("contenidoes",value)}
+
+            />
+          </div>
+
+          {/* Peso y Código */}
+          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+            <div>
+              <Label>Peso lb:</Label>
+              <Input
+                type="number"
+                value={values.pesolb}
+                name="pesolb"
+                onChange={handleChange_useForm}
+              />
+            </div>
+            <div>
+              <Label>Codigo:</Label>
+              <Input
+                type="text"
+                value={values.codigo}
+                name="codigo"
+                onChange={handleChange_useForm}
+              />
+            </div>
+
+            <div>
+              <Label>Atendido por:</Label>
+              <Input
+                type="text"
+                value={values.atendido}
+                name="atendido"
+                onChange={handleChange_useForm}
+              />
+            </div>
+            <div>
+              <Label>Tipo:</Label>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <label>
+            <Checkbox 
+          checked={seco} 
+          onChange={setSeco}
+          label="SECO" />
+          
+               </label>
+            <label>
+            <Checkbox 
+          checked={frio} 
+          onChange={setFrio}
+          label="FRIO" />
+            </label>
+            
+          </div>    
+            </div>
+          </div>
+
+          {/* SECO / FRIO y Atendido */}
+          <Button
+            size="sm"
+            onClick={enviar_pedido}
+            className="w-full"
+          >
+            Insertar Bulto
+          </Button>
+
+
+        </ComponentCard>
+      </div>
+    </Modal>
+
 
       <PageMeta
         title={`${PAGE_NAME} - Manifiesto`}
@@ -825,14 +1243,15 @@ export default function ManifiestoPage() {
                 <PageBreadcrumb pageTitle={`Total: ${peso_Total.toFixed(2)}KG`} />
         <ComponentCard title="Bultos">
 
-          <BultosTable 
+          <BultosTable
+            openInsert={setIsModalOpen2}
             bultos={bultos}
             delete_id_bulto={delete_id_bulto} />
         </ComponentCard>
         <ComponentCard title="Frios">
           <BasicTableMulti 
           tableData={tableData_frios} 
-          setTableData={setTableDataFrios} 
+         
           addBulto={addBulto} 
           addSameBulto={addSameBulto}
           handleAtiende={handleAtiende}
@@ -843,7 +1262,7 @@ export default function ManifiestoPage() {
         <ComponentCard title="Secos">
           <BasicTableMulti 
             tableData={tableData_secos} 
-            setTableData={setTableDataSecos} 
+            
             addBulto={addBulto} 
             handleAtiende={handleAtiende}
           atiende ={atiende}

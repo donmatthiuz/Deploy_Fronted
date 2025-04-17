@@ -7,9 +7,10 @@ import {DeleteIcon}  from "../../icons"
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 
+
 interface BasicTableMultiProps {
   tableData: Item[];
-  setTableData: (data: Item[]) => void;
+
   addBulto: (items: Item[]) => void;
   addSameBulto: (items: Item[]) => void;
   setUseSameID: (value: boolean) => void;
@@ -20,7 +21,7 @@ interface BasicTableMultiProps {
 
 }
 
-export default function BasicTableMulti({ tableData, setTableData, addBulto , setUseSameID, useSameID, atiende, handleAtiende}: BasicTableMultiProps) {
+export default function BasicTableMulti({ tableData,  addBulto , setUseSameID, useSameID, atiende, handleAtiende}: BasicTableMultiProps) {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   
 
@@ -89,8 +90,13 @@ export default function BasicTableMulti({ tableData, setTableData, addBulto , se
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tableData.map((item) => (
-                <TableRow key={item.id}>
+              {tableData.map((item ,index) => (
+                <TableRow 
+                  key={item.id}
+                  className={index % 2 === 0 ? 
+                    'bg-gray-50 dark:bg-gray-800/50' : 'bg-gray-200 dark:bg-gray-700'}
+
+                  >
                   <TableCell className="w-1/5 text-center">
                     <input
                       type="checkbox"
@@ -98,6 +104,9 @@ export default function BasicTableMulti({ tableData, setTableData, addBulto , se
                       onChange={() => handleSelectRow(item.id)}
                       className="cursor-pointer"
                     />
+
+              
+
                   </TableCell>
                   
                   <TableCell className="w-1/5 text-center">{item.codigo}</TableCell>
@@ -117,9 +126,12 @@ export default function BasicTableMulti({ tableData, setTableData, addBulto , se
 interface BultosTableProps {
   bultos: Item_Bulto[];
   delete_id_bulto: (id: number) => void;
+
+  openInsert: (value: boolean) => void;
+
 }
 
-export function BultosTable({ bultos, delete_id_bulto }: BultosTableProps) {
+export function BultosTable({ bultos, delete_id_bulto, openInsert }: BultosTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] mt-6">
       <div className="p-4 bg-gray-100 dark:bg-gray-800 flex justify-between items-center">
@@ -134,7 +146,9 @@ export function BultosTable({ bultos, delete_id_bulto }: BultosTableProps) {
            
 
 
-                <Button size="sm">
+                <Button size="sm"
+                  onClick={() => openInsert(true)
+                  }>
                   Nuevo Bulto
                 </Button>
                 <Button size="sm">
@@ -158,8 +172,11 @@ export function BultosTable({ bultos, delete_id_bulto }: BultosTableProps) {
             </TableRow>
           </TableHeader>
             <TableBody>
-              {bultos.map((bulto) => (
-                <TableRow key={`${bulto.id}`}>
+              {bultos.map((bulto, index) => (
+                <TableRow key={`${bulto.id}`}
+                className={index % 2 === 0 ? 
+                  'bg-gray-50 dark:bg-gray-800/50' : 'bg-gray-200 dark:bg-gray-700'}
+>
                   
                   <TableCell className="w-1/5 text-center">{bulto.id}</TableCell>
                   <TableCell className="w-1/5 text-center">{bulto.codigo}</TableCell>
