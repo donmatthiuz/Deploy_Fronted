@@ -756,7 +756,7 @@ export default function ManifiestoPage() {
 
   
 
-  const [, setData] = useState<HeaderData>({
+  const [data, setData] = useState<HeaderData>({
     no: 0,
     frios: 0,
     seco: 0,
@@ -1506,6 +1506,7 @@ export default function ManifiestoPage() {
                 </Button>
               
                 <WordComponent 
+                headerData={data}
         initialText="Empieza a escribir tu documento aquí..."
         backgroundColor="bg-blue-50"
       />

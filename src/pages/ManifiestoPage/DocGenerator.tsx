@@ -1,17 +1,27 @@
 import React from 'react';
-import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { AlignmentType, Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
 import Button from '../../components/ui/button/Button';
+
+interface HeaderData {
+  no: number;
+  frios: number;
+  seco: number;
+  kg: number;
+}
 interface WordComponentProps {
   initialText?: string;
   backgroundColor?: string;
+  headerData: HeaderData;
 }
 
 const WordComponent: React.FC<WordComponentProps> = (props) => {
   const {
-    initialText = "Documento de Word",
     
+    headerData,
   } = props;
+  const fecha = new Date();
+  const fechaFormateada = fecha.toLocaleDateString();
 
   const downloadWord = async () => {
     try {
@@ -21,10 +31,36 @@ const WordComponent: React.FC<WordComponentProps> = (props) => {
           properties: {},
           children: [
             new Paragraph({
-              children: [
-                new TextRun(initialText),
-              ],
-            }),
+                      children: [
+                        new TextRun({ text: fechaFormateada, bold: true, size: 48, font: "Arial Black" }), 
+                        new TextRun({ text: "", break: 2 }),
+                      ],
+                      alignment: AlignmentType.RIGHT, 
+                    }),
+
+              new Paragraph({
+                      children: [
+                          new TextRun({ text: "BULTOS EN TOTAL", bold: true, size: 84, font: "Arial Black" }), 
+                          new TextRun({ text: "", break: 2 }),
+                          new TextRun({ text: headerData.no.toString(), bold: true, size: 84, font: "Arial Black" }),
+                          new TextRun({ text: "", break: 2 }),
+                          new TextRun({ text: "BULTOS FRIOS", bold: true, size: 84, font: "Arial Black" }),
+                          new TextRun({ text: "", break: 2 }),
+                          new TextRun({ text: headerData.frios.toString(), bold: true, size: 84, font: "Arial Black" }), 
+                          new TextRun({ text: "", break: 2 }),
+                          new TextRun({ text: "BULTOS SECOS", bold: true, size: 84, font: "Arial Black" }),
+                          new TextRun({ text: "", break: 2 }),
+                          new TextRun({ text: headerData.seco.toString(), bold: true, size: 84, font: "Arial Black" }), 
+                          new TextRun({ text: "", break: 2 }),
+                          new TextRun({ text: "PESO TOTAL", bold: true, size: 84, font: "Arial Black" }),
+                          new TextRun({ text: "", break: 2 }),
+                          new TextRun({ text: headerData.kg.toString()+"KL", bold: true, size: 84, font: "Arial Black" }),
+                          
+                      ],
+                      alignment: AlignmentType.CENTER, 
+                    }),
+                    
+           
           ],
         }],
       });
