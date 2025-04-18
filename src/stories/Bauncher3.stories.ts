@@ -14,7 +14,7 @@ type Story = StoryObj<typeof Bauncher3>;
 
 export const Default: Story = {
   args: {
-    info: {
+    info_list: [{
       bulto: 1,
       peso: '60.0',
       envia: "Juan Pérez",
@@ -35,6 +35,6 @@ export const Default: Story = {
       atendido: "Empleado",
       oficina: 'Guatemala',
       tipo: 'SECO'
-    },
+    }],
   },
 };

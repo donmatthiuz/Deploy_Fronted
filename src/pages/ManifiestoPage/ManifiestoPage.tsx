@@ -4,7 +4,7 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import ComponentCard from "../../components/common/ComponentCard";
 import BasicTableMulti from "../../components/tables/BasicTableMulti";
 import { BultosTable } from "../../components/tables/BasicTableMulti";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import source_link from "../../repositori/source_repo";
 import useApi from "../../hooks/useApi";
 import { saveAs } from "file-saver";
@@ -15,32 +15,280 @@ import { Modal } from "../../components/ui/modal";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Swal from "sweetalert2";
+import { EditIcon } from "../../icons";
+import TextArea from "../../components/form/input/TextArea";
+import { object, string, number } from 'yup';
+import useForm from "../../hooks/useForm";
+import Checkbox from "../../components/form/input/Checkbox";
+import DocGenerator from "./DocGenerator";
+import { useReactToPrint } from "react-to-print";
+import Bauncher3 from "../../components/Bauncher3/Bauncher3";
 
+
+interface Bauncher_data {
+  bulto: number;
+  peso: string;
+  envia: string;
+  direccion_envia: string;
+  ciudad_envia: string;
+  identif_envia: string;
+  telefono_envia: string;
+  recibe: string;
+  direccion_recibe: string;
+  ciudad_recibe: string;
+  region: string;
+  codigo_postal: string;
+  telefono_recibe: string;
+  identif_recibe: string;
+  descripcion: string[];
+  contenido: string;
+  codigo: string;
+  atendido: string;
+  oficina: string;
+  tipo: string;
+}
+
+
+interface Direccion {
+  id: number;
+  direccion: string;
+  ciudad: string;
+  estado: string;
+  postal: string;
+  pais_id: number;
+}
+
+
+const printStyles = `
+  @media print {
+    .bauncher-print {
+      page-break-inside: avoid;
+      page-break-after: auto;
+      page-break-before: auto;
+      max-height: fit-content;
+      max-width: fit-content;
+    }
+
+    .total {
+      display: none;
+    }
+  }
+
+  .bauncher-print {
+    height: fit-content;
+    width: fit-content;
+    display: none;
+  }
+
+  @media print {
+    html, body {
+      height: initial !important;
+      overflow: initial !important;
+    }
+  }
+`;
+
+
+interface Bulto {
+  id_real: number;
+  id: number;
+  codigo: string;
+  contenido: string;
+  peso: string;
+  pesoKilos: string;
+  tipo: string;
+  envia: string;
+  direccionenvia: number;
+  telefonoenvia: string;
+  nombrerecibe: string;
+  telefonorecibe: string;
+  direccionrecibe: number;
+  envia_direccion: Direccion;
+  recibe_direccion: Direccion;
+  costodolares: number;
+  atendido: string;
+}
+
+
+const schma_insert = object({
+ 
+  codigo_manifiesto: string(),
+  bulto: number(),
+  codigo: string(),
+  pesolb: number(),
+  tipo: string(),
+  contenidoes: string(),
+  envia: string(),
+  direccionenvia: string(),
+  telefonoenvia: string(),
+  nombrerecibe: string(),
+  telefonorecibe: string(),
+  direccionrecibe: string(),
+  atendido: string(),
+ 
+
+
+})
 
 export interface Item {
+  id_real?: number | null;
   id: number;
   codigo: string;
   contenido: string;
   peso: number;
+  pesoKilos: number;
   tipo: string;
+  
+  
+  nombre_cliente_envia: string;
+  direccion_cliente_envia: number;
+  telefono_cliente_envia: string;
+
+  nombre_cliente_recibe: string;
+  direccion_cliente_recibe: number;
+  telefono_cliente_recibe: string;
+
+}
+
+
+export interface Item_Bulto {
   id_real?: number | null;
+  id: number;
+  codigo: string;
+  contenido: string;
+  peso: number;
+  pesoKilos: number;
+  tipo: string;
+  
+  
+  envia: string;
+  direccionenvia: number;
+  telefonoenvia: string;
+
+  nombrerecibe: string;
+  direccionrecibe: number;
+  telefonorecibe: string;
+}
+
+interface HeaderData {
+  no: number;
+  frios: number;
+  seco: number;
+  kg: number;
 }
 
 export default function ManifiestoPage() {
 
-  const { llamado: traducir } = useApi(`${source_link}/translate`);
 
-  const { llamado: getPaquetedata } = useApi(`${source_link}/getPaquetedata`);
+  // const handleClick = () => {
+  //   DocGenerator({
+  //     no: 25,
+  //     frios: 10,
+  //     seco: 15,
+  //     kg: 320
+  //   });
+  // };
+
+  const contarTiposBultos = (bultos: Item_Bulto[]) => {
+    const idsUnicos = new Set<number>();
+    let seco = 0;
+    let frio = 0;
+  
+    for (const bulto of bultos) {
+      if (!idsUnicos.has(bulto.id)) {
+        idsUnicos.add(bulto.id);
+  
+        const tipo = bulto.tipo.trim().toLowerCase();
+        if (tipo === "seco") seco++;
+        else if (tipo === "frio") frio++;
+      }
+    }
+  
+    return {
+      total: idsUnicos.size,
+      seco,
+      frio
+    };
+  }
+
+
+  const handleChange_useForm = (e:any) => {
+    const { name, value } = e.target;
+    setValue(name, value);
+  };
+  
+
+  
+
+  const { llamado: removerBultoManifiesto } = useApi(`${source_link}/removerBultoManifiesto`);
+
+
+  const {llamado: insertarBulto} = useApi(`${source_link}/insertarBulto`)
+
+  const {llamado: obtenerNombreAleatorio} = useApi(`${source_link}/obtenerNombreAleatorio`)
+
+  const {llamado: obtener_telefono_aleatoria} = useApi(`${source_link}/obtener_telefono_aleatoria`)
+
+
+  
+
+  const { llamado: getBultos_Manifiesto } = useApi(`${source_link}/getBultos_Manifiesto`);
+
+  const { llamado: insertar_numero_guia } = useApi(`${source_link}/insertar_numero_guia`);
   
   const {codigo,setCodigo} = useCodigo();
 
   const [useSameID, setUseSameID] = useState(false);
+
+
+  const [frio, setFrio] = useState(false)
+  const [seco, setSeco] = useState(false)
+
+  const [usa, setUsa] = useState(false)
+  const [gt, setGT] = useState(true)
   
+
+  const [isModal3, setModal3] = useState(false)
+
+
+  const { values, setValue } = useForm(schma_insert, { 
+    codigo_manifiesto: codigo,
+    bulto: 0,
+    codigo: '',
+    pesolb: 0,
+    tipo: '',
+    contenidoes: '',
+    envia: '',
+    direccionenvia: '',
+    telefonoenvia: '',
+    nombrerecibe: '',
+    telefonorecibe: '',
+    direccionrecibe: '',
+    atendido: '',
+  });
 
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen2, setIsModalOpen2] = useState(false);
+
+  const [codigos, setCodigos] = useState({
+    codigoInicio: "",
+    codigoFinal: "",
+  });
+  const handleCodigos_print = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCodigos(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  
+  
+
 
   const closeModal = () => setIsModalOpen(false);
+  const closeModal2 = () => setIsModalOpen2(false);
+  const closeModal3 = () => setModal3(false)
 
 
   
@@ -54,33 +302,25 @@ export default function ManifiestoPage() {
       });
       return;
     }
+
+
+    const bultos_manifiesto = await obtener_manifiesto({
+      id_number: "All",
+      numero_guia: codigo
+    },"POST")
+
+    
   
     // Map data_bultos from bultos
-    const data_bultos = await Promise.all(bultos.map(async (bulto) => {
+    const data_bultos = await Promise.all(bultos_manifiesto.response.map(async (bulto: Bulto) => {
 
-      const body = {
-            text: bulto.descripcion,
-            sourceLang: "es",
-            targetLang: "en"
-      };
-
-      const bodydata = {
-        idPaquete:bulto.id_real
-      }
+      
       
 
-      const resultado = await traducir(body, "POST");
-
-      const resultado_data = await getPaquetedata(bodydata, "POST");
-
-
-      const descripcionTraducida = resultado.translatedText.toUpperCase();
-      const nombreenvia = resultado_data.response.envia.nombre.toUpperCase();
-      const nombrerecibe = resultado_data.response.recibe.nombre.toUpperCase();
-      const direnvia = resultado_data.response.envia.direccion.toUpperCase();
-      const dirrerecibe = resultado_data.response.recibe.direccion.toUpperCase();
-      const consigntelephone = resultado_data.response.recibe.telefono;
-      console.log(bulto.descripcion)
+     
+      // const dirrerecibe = resultado_data.response.recibe.direccion.toUpperCase();
+      
+      
       return {
         "SITEID": 23,
         "WAYBILLORIGINATOR":"F703",
@@ -98,28 +338,28 @@ export default function ManifiestoPage() {
         "Origen": "GUA",
         "DESTINO": "JFK",
         "PIEZAS": "1",
-        "PESO": (bulto.peso * 0.453592).toFixed(2),
-        "NOMBRE DEL SHIPPER": nombreenvia,
-        "DIRECCION 1 SHIPPER": dirrerecibe,
-        "CIUDAD SHIPPER": "",
-        "ESTADO REGION": "GT",
-        "PAIS": "GT",
+        "PESO": bulto.pesoKilos,
+        "NOMBRE DEL SHIPPER": bulto.envia.toUpperCase(),
+        "DIRECCION 1 SHIPPER": bulto.envia_direccion.direccion,
+        "CIUDAD SHIPPER": bulto.envia_direccion.ciudad,
+        "ESTADO REGION": bulto.envia_direccion.estado,
+        "PAIS": bulto.envia_direccion.pais_id == 1 ? "GT" : "USA",
         "CODIGO POSTAL": "",
-        "NOMBRE DEL CONSIGNATARIO": nombrerecibe,
-        "DIRECCION CONSIGNATARIO": direnvia,
-        "CIUDAD CONSIGN": "",
-        "ESTADO": "",
-        "PAIS CONSIGN": "USA",
-        "CODIGO POSTAL CONSIGN": "",
-        "DESCRIPCION DE LA CARGA": descripcionTraducida || "", // Si la traducción falla, se coloca un string vacío
+        "NOMBRE DEL CONSIGNATARIO": bulto.nombrerecibe.toUpperCase(),
+        "DIRECCION CONSIGNATARIO": bulto.recibe_direccion.direccion,
+        "CIUDAD CONSIGN": bulto.recibe_direccion.ciudad,
+        "ESTADO": bulto.recibe_direccion.estado,
+        "PAIS CONSIGN": bulto.recibe_direccion.pais_id == 2 ? "USA" : "GT",
+        "CODIGO POSTAL CONSIGN": bulto.recibe_direccion.postal,
+        "DESCRIPCION DE LA CARGA": bulto.contenido.toUpperCase() || "", // Si la traducción falla, se coloca un string vacío
         "BAG": bulto.id,
-        "CONSIGNEETELEPHONE": consigntelephone,
-        "CUSTOMSVALUE":  Math.ceil(bulto.peso / 10) + 6,
+        "CONSIGNEETELEPHONE": bulto.telefonorecibe,
+        "CUSTOMSVALUE":  bulto.costodolares,
       };
     }));
   
   
-    console.log("Datos para exportar:", data_bultos);  // Debugging log to check data
+    
   
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Bultos');
@@ -508,19 +748,49 @@ export default function ManifiestoPage() {
 
   const [tableData_frios, setTableDataFrios] = useState<Item[]>([]);
   const [tableData_secos, setTableDataSecos] = useState<Item[]>([]);
-  const [bultos, setBultos] = useState<{ id: number; numeroBulto: number; codigo: string; descripcion: string; peso: number; tipo: string, id_real: number | null; }[]>([]);
+
+
+  
+
+  const [infoBauncher, setInfoBauncher] = useState<Bauncher_data[]>([]);
+
+  
+
+  const [data, setData] = useState<HeaderData>({
+    no: 0,
+    frios: 0,
+    seco: 0,
+    kg: 0,
+  });
+
+  const [atiende, setAtiende] = useState('')
+
+  const [bultos, setBultos] = useState<Item_Bulto[]>([]);
   const { llamado: obtener_paquetes_fecha_paquete } = useApi(`${source_link}/obtener_paquetes_fecha_tipo`);
+
+  const { llamado: obtener_manifiesto } = useApi(`${source_link}/obtener_manifiesto`);
+
   const [codigomio, setCodigomio] = useState('')
+  const [reload, setReload] = useState(false);
+
+  const [peso_Total, setPesoTotal] = useState(0)
 
   const handleChangeGuia = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setCodigomio(value)
   }; 
 
-  const [bultoCounter] = useState(1);
+  const handleAtiende = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setAtiende(value)
+  }; 
 
-  const getWeekRange = () => {
-    const today = new Date();
+  
+
+  const getWeekRange = () => { 
+    const t = new Date();
+    const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+
     const dayOfWeek = today.getDay();
     const startDate = new Date(today);
     startDate.setDate(today.getDate() - ((dayOfWeek + 3) % 7));
@@ -534,98 +804,496 @@ export default function ManifiestoPage() {
     };
   };
 
+  function obtenerIndiceItemTotalmenteUnico(items: Item[], bultos: Item_Bulto[]): number | null {
+    const codigosBultos = new Set(bultos.map(b => b.codigo));
+    const telefonosEnvia = new Set(bultos.map(b => b.telefonoenvia));
+    const telefonosRecibe = new Set(bultos.map(b => b.telefonorecibe));
+    const nombresEnvia = new Set(bultos.map(b => b.envia));
+    const nombresRecibe = new Set(bultos.map(b => b.nombrerecibe));
+  
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (
+        !codigosBultos.has(item.codigo) &&
+        !telefonosEnvia.has(item.telefono_cliente_envia) &&
+        !telefonosRecibe.has(item.telefono_cliente_recibe) &&
+        !nombresEnvia.has(item.nombre_cliente_envia) &&
+        !nombresRecibe.has(item.nombre_cliente_recibe)
+      ) {
+        return i;
+      }
+    }
+  
+    return 0;
+  }
+
+  const [readyToPrint, setReadyToPrint] = useState(false); // 👈 estado de control
+
+  
+
+  
   const { range, fecha_inicio, fecha_fin } = getWeekRange();
 
   useEffect(() => {
-    if (codigo=='' ){
+    if (readyToPrint && infoBauncher.length > 0) {
+      handlePrint_bauncher();
+      setReadyToPrint(false); // 👈 resetear para evitar múltiples impresiones
+    }
+  }, [readyToPrint, infoBauncher]);
+
+  
+  useEffect(() => {
+    if (codigo=='' || codigo == null ){
       setIsModalOpen(true)
      }
-   
+     
+    
+    
+    
     const get_frios = async () => {
       const body_frio = { fecha_inicio, fecha_fin, tipo: "Frio" };
       const body_seco = { fecha_inicio, fecha_fin, tipo: "Seco" };
       const response = await obtener_paquetes_fecha_paquete(body_frio, "POST");
       const response2 = await obtener_paquetes_fecha_paquete(body_seco, "POST");
+      const butos_body = {numero_guia: codigo}
+      const reposne_bultos = await getBultos_Manifiesto(butos_body,"POST");
+      
+      
+
+      const respuesta_cantidad = contarTiposBultos(reposne_bultos.response.bultos)
+      updateField("no", respuesta_cantidad.total);
+      updateField("seco", respuesta_cantidad.seco);
+      updateField("frios", respuesta_cantidad.frio);
+      updateField("kg", reposne_bultos.response.totalKilos);
+
+      
+      setBultos(reposne_bultos.response.bultos);
+      setPesoTotal(reposne_bultos.response.totalKilos)
+      
       setTableDataFrios(response.response);
       setTableDataSecos(response2.response);
 
-      console.log(response)
+
+      
     };
     get_frios();
-  }, []);
+  }, [reload]);
 
-  const addBulto = (items: Item[]) => {
+  const addBulto = async (items: Item[]) => {
+    const index = obtenerIndiceItemTotalmenteUnico(items, bultos);
+
+
     if (items.length === 0) return;
-    const codigo = items[0].codigo;
-    const id_real = items[0].id; // ✅ Se asigna el id del primer item
+    let indice = 0
+    if (index != null) {
+
+      indice = index
+
+    }
+    const codigo_ = items[indice].codigo;
     const descripcion = items.map(item => item.contenido).join(", ");
     const peso = items.reduce((sum: number, item) => sum + (parseFloat(item.peso?.toString()) || 0), 0);
 
 
+    
 
-    const tipo = items[0].tipo;
+    const direcciones_ids = [
+      ...bultos.map(item => item.direccionenvia),
+      ...bultos.map(item => item.direccionrecibe)
+    ];
+    
+    const ids_todos = items.map(item => item.id)
+
+
+    const tipo = items[indice].tipo;
+    const envia = items[indice].nombre_cliente_envia;
+    const recibe = items[indice].nombre_cliente_recibe;
+
+    const direccion_envia = items[indice].direccion_cliente_envia;
+    const direccion_recibe = items[indice].direccion_cliente_recibe;
+
+    const telefono_envia = items[indice].telefono_cliente_envia;
+    const telefono_recibe = items[indice].telefono_cliente_recibe;
+
+
+    let last_idBulto = bultos.length > 0 ? Math.max(...bultos.map(b => b.id)) : 0;
 
     if (!useSameID){
-      const lastId = bultos.length > 0 ? Math.max(...bultos.map(b => b.id)) : 0;
-      const lastNumeroBulto = bultos.length > 0 ? Math.max(...bultos.map(b => b.numeroBulto)) : 0;
+      last_idBulto += 1;
+    }
+    const body = {
+      codigo_manifiesto: codigo,
+      bulto:  last_idBulto,
+      codigo: codigo_,
+      pesolb: peso,
+      tipo : tipo,
+      contenidoes: descripcion,
+      envia: envia,
+      direccionenvia: direccion_envia,
+      telefonoenvia: telefono_envia,
+      nombrerecibe: recibe,
+      telefonorecibe: telefono_recibe,
+      direccionrecibe: direccion_recibe,
+      atendido: atiende,
+      direcciones_todas: direcciones_ids,
+      id_frios_secos : ids_todos
 
-      setBultos([
-        ...bultos,
-        {
-          id: lastId + 1,
-          numeroBulto: lastNumeroBulto + 1,
-          codigo,
-          descripcion,
-          peso,
-          tipo,
-          id_real
-        }
-      ]);
 
-      //setBultoCounter(bultoCounter + 1);
+    }
+
+    const response = await insertarBulto(body, "POST");
+
+    if (!response.success){
+      closeModal2()
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al insertar los codigos',
+        text: 'No es posible insertar el bulto',
+        confirmButtonText: 'Aceptar'
+      });
+
+
     }else{
-      const lastId = bultos.length > 0 ? Math.max(...bultos.map(b => b.id)) : 0;
-      const lastNumeroBulto = bultos.length > 0 ? Math.max(...bultos.map(b => b.numeroBulto)) : 0;
-
-      setBultos([
-        ...bultos,
-        {
-          id: lastId,
-          numeroBulto: lastNumeroBulto,
-          codigo,
-          descripcion,
-          peso,
-          tipo,
-          id_real
-        }
-      ]);
-      //setBultoCounter(bultoCounter);
+      
+      setReload(prev => !prev);
     }
 
   };
 
-  const add_Codigo = () =>{
+  const enviar_pedido =  async() => {
 
-    setCodigo(codigomio)
-    closeModal();
+    let tipo_ = ''
+
+    let direcciones_envua_ = 'GT'
+    let direcciones_recibe_ = 'USA'
+
+    if (seco){
+      tipo_ = 'Seco'
+    }else if(frio){
+      tipo_ = 'Frio'
+    }
+
+    if(usa){
+      direcciones_envua_ = 'USA'
+      direcciones_recibe_ = 'GT'
+    }else if (gt){
+      direcciones_envua_ = 'GT'
+      direcciones_recibe_ = 'USA'
+    }
+    
+    const body = {
+      codigo_manifiesto: codigo,
+      bulto:  values.bulto,
+      codigo: values.codigo,
+      pesolb: values.pesolb,
+      tipo : tipo_,
+      contenidoes: values.contenidoes,
+      envia: values.envia,
+      direccionenvia: direcciones_envua_,
+      telefonoenvia: '',
+      nombrerecibe: values.nombrerecibe,
+      telefonorecibe: values.telefonorecibe,
+      direccionrecibe: direcciones_recibe_,
+      atendido: values.atendido,
+      direcciones_todas: [
+        ...bultos.map(item => item.direccionenvia),
+        ...bultos.map(item => item.direccionrecibe)
+      ],
+      id_frios_secos : []
+
+
+    }
+
+
+    const response = await insertarBulto(body, "POST");
+
+    if (!response.success){
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al insertar los codigos',
+        text: 'No es posible insertar el bulto',
+        confirmButtonText: 'Aceptar'
+      });
+
+
+    }else{  
+
+      setValue('codigo', '');
+      setValue('tipo', '');
+      setValue('envia', '');
+      setValue('direccionenvia', '');
+      setValue('telefonoenvia', '');
+      setValue('nombrerecibe', '');
+      setValue('telefonorecibe', '');
+      setValue('direccionrecibe', '');
+
+      
+      setReload(prev => !prev);
+    }
+
   }
 
-  const addSameBulto = (items: Item[]) => {
-    if (items.length === 0) return;
-    const codigo = items[0].codigo;
-    const descripcion = items.map(item => item.contenido).join(", ");
-    const peso = items.reduce((sum: number, item) => sum + (parseFloat(item.peso?.toString()) || 0), 0);
-    const tipo = items[0].tipo;
 
-    setBultos([...bultos, { id: bultos.length + 1, numeroBulto: bultoCounter, codigo, descripcion, peso, tipo ,   id_real: null}]);
+  const add_Codigo = async () =>{
+
+    setCodigo(codigomio)
+
+    const body = {
+      numero_guia: codigomio
+    }
+    const response = await insertar_numero_guia(body, "POST")
+
+    if (response.numero_guia == codigomio || response){
+      closeModal();
+      setReload(prev => !prev);
+    }else{
+      closeModal();
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al insertar codigo',
+        text: 'No es posible insertar el codigo de manera exitosa',
+        confirmButtonText: 'Aceptar'
+      });
+    }
+    
+
+  }
+
+  const updateField = (field: keyof HeaderData, value: number) => {
+    setData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+  
+
+  const addSameBulto = (items: Item[]) => {
+    console.log(items)
   };
 
-  // Calcular el peso total de los bultos en libras y convertir a kilos
-  const totalPesoLibras = bultos.reduce((sum, bulto) => sum + bulto.peso, 0);
-  const totalPesoKilos = totalPesoLibras * 0.453592; // 1 libra = 0.453592 kg
 
+  const delete_id_bulto = async (id:number) => {
+
+    const body = {
+      id_bulto: id
+    }
+    await removerBultoManifiesto(body, "DELETE");
+    setReload(prev => !prev);
+  }
+
+
+  const obtener_nombre_envia = async() => {
+    const nombres = [
+      ...bultos.map(item => item.nombrerecibe),
+      ...bultos.map(item => item.envia)
+    ];
+    
+
+
+    const response = await  obtenerNombreAleatorio({
+
+      nombres_excluidos: nombres
+    }, "POST")
+
+    if (response.success){
+      setValue("envia", response.respuesta.id)
+      
+    }else{
+      setValue("envia", "No tenemos mas nombres")
+    }
+
+  }
+
+  const obtener_nombre_recibe = async() => {
+    const nombres = [
+      ...bultos.map(item => item.nombrerecibe),
+      ...bultos.map(item => item.envia)
+    ];
+    
+
+
+    const response = await  obtenerNombreAleatorio({
+
+      nombres_excluidos: nombres
+    }, "POST")
+
+    if (response.success){
+      setValue("nombrerecibe", response.respuesta.id)
+    }else{
+      setValue("envia", "No tenemos mas nombres")
+    }
+
+  }
+
+  const obtener_telefono =  async (estado_id:number) => {
+    const response  = await obtener_telefono_aleatoria({
+      estado: estado_id,
+      telefonos_excluidos: [
+        ...bultos.map(item => item.telefonoenvia),
+        ...bultos.map(item => item.telefonorecibe)
+      ]
+    }, "POST")
+
+    if (!response.success) {
+
+      setValue("telefonorecibe", "No hay mas telefonos")
+
+    }else{
+      setValue("telefonorecibe", response.respuesta.telefono)
+    }
+
+  }
+
+  
+  const obtenerIdsEnRango = (codigoInicio: string, codigoFinal: string) => {
+    let enRango = false;
+    const idsRealEnRango: number[] = [];
+  
+    for (const bulto of bultos) {
+      // Si encontramos el bulto de inicio, comenzamos a agregar los id_real
+      if (bulto.codigo === codigoInicio) {
+        enRango = true; // Comienza el rango
+        // Verificar que id_real no sea null ni undefined antes de agregarlo
+        if (bulto.id_real !== null && bulto.id_real !== undefined) {
+          idsRealEnRango.push(bulto.id_real); // Agregamos el primer id_real
+        }
+      }
+  
+      // Si estamos dentro del rango, agregamos los id_real
+      if (enRango && bulto.codigo !== codigoFinal) {
+        if (bulto.id_real !== null && bulto.id_real !== undefined) {
+          idsRealEnRango.push(bulto.id_real); // Agregamos los id_real dentro del rango
+        }
+      }
+  
+      // Cuando llegamos al código final, agregamos el id_real y salimos del rango
+      if (enRango && bulto.codigo === codigoFinal) {
+        if (bulto.id_real !== null && bulto.id_real !== undefined) {
+          idsRealEnRango.push(bulto.id_real); // Agregamos el último id_real
+        }
+        break; // Terminamos el rango
+      }
+    }
+    const idsUnicos = [...new Set(idsRealEnRango)];
+    return idsUnicos;
+  };
+  
+  
+  const imprimir_bultos = async() => {
+    const bultos_en_rango = obtenerIdsEnRango(codigos.codigoInicio, codigos.codigoFinal)
+
+    const respuesta = await obtener_manifiesto(
+      {
+        id_number: bultos_en_rango,
+        numero_guia: codigo
+      }
+      ,"POST")
+    
+    if (respuesta.success){
+      
+
+
+      const datos_bultos_print: Bauncher_data[] = await Promise.all(
+        respuesta.response.map(async (bulto: Bulto): Promise<Bauncher_data> => {
+          return {
+            bulto: bulto.id,
+            peso: bulto.peso,
+            envia: bulto.envia,
+            direccion_envia: bulto.envia_direccion?.direccion ?? "",
+            ciudad_envia: bulto.envia_direccion?.ciudad ?? "",
+            identif_envia: "", // Suponiendo que no tienes este dato directamente
+            telefono_envia: bulto.telefonoenvia,
+            recibe: bulto.nombrerecibe,
+            direccion_recibe: bulto.recibe_direccion?.direccion ?? "",
+            ciudad_recibe: bulto.recibe_direccion?.ciudad ?? "",
+            region: bulto.recibe_direccion?.estado ?? "",
+            codigo_postal: bulto.recibe_direccion?.postal ?? "",
+            telefono_recibe: bulto.telefonorecibe,
+            identif_recibe: "", // Suponiendo que no tienes este dato directamente
+            descripcion: ["1 PAQUETE"], // Puedes rellenar con lo que haga falta
+            contenido: bulto.contenido,
+            codigo: bulto.codigo,
+            atendido: bulto.atendido.toUpperCase(),
+            oficina: bulto.recibe_direccion.ciudad, // Igual, depende de tu lógica
+            tipo: bulto.tipo,
+          };
+        })
+      );
+      
+
+      setInfoBauncher(datos_bultos_print)
+      
+      setReadyToPrint(true); 
+
+    }else{
+
+      Swal.fire({
+        icon: 'error',
+        title: 'No se encontro los datos',
+        text: 'Hubo un error para imprimir, verifique que el rango sea correcto',
+        confirmButtonText: 'Aceptar'
+      });
+
+    }
+
+  }
+  
+  const componentRef = useRef<HTMLDivElement | null>(null);
+  const handlePrint_bauncher = useReactToPrint({
+      contentRef: componentRef,
+      documentTitle: "Sticker Manifiesto",
+      onAfterPrint: () => console.log("Impresión completada"),
+    });
+ 
+  
+   
+    
   return (
     <>
+    <style>{printStyles}</style>
+    <div className="bauncher-print"  >
+    <Bauncher3  info_list={infoBauncher} ref={componentRef}     />
+    </div>
+           <Modal isOpen={isModal3} onClose={closeModal3} showCloseButton={true}>
+            <div>
+              <ComponentCard title="Imprimir en Rango">
+                <div className="space-y-4">
+                  <div className="flex space-x-4">
+                    <div className="flex flex-col w-1/2">
+                      <Label htmlFor="codigoInicio">Código Inicio</Label>
+                      <Input 
+                        type="text" 
+                        id="codigoInicio"
+                        name="codigoInicio"
+                        value={codigos.codigoInicio}
+                        onChange={handleCodigos_print}
+                    
+                      />
+                    </div>
+
+                    <div className="flex flex-col w-1/2">
+                      <Label htmlFor="codigoFinal">Código Final</Label>
+                      <Input 
+                        type="text" 
+                        id="codigoFinal"
+                        name="codigoFinal"
+                        value={codigos.codigoFinal}
+                        onChange={handleCodigos_print}
+
+                  
+                      />
+                    </div>
+                  </div>
+
+                  <Button size="sm" onClick={imprimir_bultos} className="w-full">
+                    Imprimir
+                  </Button>
+                </div>
+              </ComponentCard>
+            </div>
+          </Modal>
+
+
         <Modal isOpen={isModalOpen} onClose={closeModal} showCloseButton={true}>
           <div>
           <ComponentCard title="No tienes numero Guia">
@@ -647,38 +1315,226 @@ export default function ManifiestoPage() {
           </div>
         </Modal>
 
+        <Modal isOpen={isModalOpen2} onClose={closeModal2} showCloseButton={true}>
+                <div>
+                  <ComponentCard title="Agregar Nuevo Bulto">
+
+                        {/* Numero de Bulto */}
+                        <div>
+                          <Label htmlFor="bulto">Numero de Bulto</Label>
+                          <Input
+                            type="number"
+                            id="bulto"
+                            value={values.bulto}
+                            name="bulto"
+                            onChange={handleChange_useForm}
+                          />
+                        </div>
+                        {/* Nombre Envia y Nombre Recibe */}
+                        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                          {/* Nombre Envia */}
+                          <div style={{ flex: 1 }}>
+                            <Label>Nombre Envia</Label>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                              <Input
+                                type="text"
+                                value={values.envia}
+                                name="envia"
+                                onChange={handleChange_useForm}
+                              />
+                              <Button size="sm" onClick={obtener_nombre_envia}>Obtener Nombre</Button>
+                            </div>
+                          </div>
+
+                          {/* Nombre Recibe */}
+                          <div style={{ flex: 1 }}>
+                            <Label>Nombre Recibe</Label>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                              <Input
+                                type="text"
+                                value={values.nombrerecibe}
+                                name="nombrerecibe"
+                                onChange={handleChange_useForm}
+                              />
+                              <Button size="sm" onClick={obtener_nombre_recibe}>Obtener Nombre</Button>
+                            </div>
+                          </div>
+                          
+                        </div>
+
+
+                        {/* Teléfono */}
+                        <div style={{ display: 'flex', gap: '10rem', flexWrap: 'wrap' }}>
+                        <div>
+                            <Label>Tipo de Envio:</Label>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                          <label>
+                            <Checkbox
+                              checked={gt}
+                              onChange={setGT}
+                              label=" Guatemala a USA"
+                            />
+                          </label>
+                          <label>
+                          <Checkbox
+                              checked={usa}
+                              onChange={setUsa}
+                              label="USA a GT"
+                            />
+
+                          </label>
+                          
+                        </div>    
+                          </div>
+                        <div>
+                          <Label>Telefono Recibe</Label>
+                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                            <Input
+                              type="number"
+                              value={values.telefonorecibe}
+                              name="telefonorecibe"
+                              onChange={handleChange_useForm}
+                            />
+                            <Button size="sm" onClick={()=>obtener_telefono(1)}>Numero M</Button>
+                            <Button size="sm" onClick={()=>obtener_telefono(2)}>Numero NY</Button>
+                          </div>
+                        </div>
+                        </div>
+                        {/* Contenido */}
+                        <div>
+                          <Label>Contenido</Label>
+                          <TextArea rows={3} 
+                            value={values.contenidoes} 
+                            onChange={(value) => setValue("contenidoes",value)}
+
+                          />
+                        </div>
+
+                        {/* Peso y Código */}
+                        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                          <div>
+                            <Label>Peso lb:</Label>
+                            <Input
+                              type="number"
+                              value={values.pesolb}
+                              name="pesolb"
+                              onChange={handleChange_useForm}
+                            />
+                          </div>
+                          <div>
+                            <Label>Codigo:</Label>
+                            <Input
+                              type="text"
+                              value={values.codigo}
+                              name="codigo"
+                              onChange={handleChange_useForm}
+                            />
+                          </div>
+
+                          <div>
+                            <Label>Atendido por:</Label>
+                            <Input
+                              type="text"
+                              value={values.atendido}
+                              name="atendido"
+                              onChange={handleChange_useForm}
+                            />
+                          </div>
+                          <div>
+                            <Label>Tipo:</Label>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                          <label>
+                          <Checkbox 
+                        checked={seco} 
+                        onChange={setSeco}
+                        label="SECO" />
+                        
+                            </label>
+                          <label>
+                          <Checkbox 
+                        checked={frio} 
+                        onChange={setFrio}
+                        label="FRIO" />
+                          </label>
+                          
+                        </div>    
+                          </div>
+                        </div>
+
+                        {/* SECO / FRIO y Atendido */}
+                        <Button
+                          size="sm"
+                          onClick={enviar_pedido}
+                          className="w-full"
+                        >
+                          Insertar Bulto
+                        </Button>
+
+
+                      </ComponentCard>
+                    </div>
+                  </Modal>
+
+
       <PageMeta
         title={`${PAGE_NAME} - Manifiesto`}
         description="Esta es la página de tablas básicas para el Dashboard de TailAdmin en React.js y Tailwind CSS"
       />
-      <PageBreadcrumb pageTitle={`Manifiesto 202 - ${codigo}  |   Semana: ${range}`} />
+
+      <div style={{flexDirection: 'row', display: 'flex', gap: '2rem'}}>
+
+      <h1 style={{fontSize: '1.3rem'}}>Manifiesto Segun Guia 202 - {codigo} </h1>
+      <Button size="sm"  variant="outline"  onClick={() => setIsModalOpen(true)} startIcon={<EditIcon />} children={undefined}>  
+      </Button>
+      </div>
       
+      
+      <div>
+        <h1 style={{fontSize: '1.3rem'}}>Semana {range} </h1>
+      </div>
+      <br/>
+
+
 
       
       <div className="space-y-6">
     
-              <Button size="sm" onClick={exportToExcel}>
+
+            <div style={{display: 'flex', flexDirection: 'row' , gap: '2rem'}}>
+            <Button size="sm" onClick={exportToExcel}>
               Descargar Manifiestos
                 </Button>
-                <PageBreadcrumb pageTitle={`Total: ${totalPesoKilos.toFixed(2)}KG`} />
+              
+                <DocGenerator headerData={data} />
+            </div>
+              
+                <PageBreadcrumb pageTitle={`Total: ${peso_Total.toFixed(2)}KG`} />
         <ComponentCard title="Bultos">
 
-          <BultosTable bultos={bultos} />
+          <BultosTable
+            openInsert={setIsModalOpen2}
+            imprimir={()=>setModal3(true)}
+            bultos={bultos}
+            delete_id_bulto={delete_id_bulto} />
         </ComponentCard>
         <ComponentCard title="Frios">
           <BasicTableMulti 
           tableData={tableData_frios} 
-          setTableData={setTableDataFrios} 
+         
           addBulto={addBulto} 
-          addSameBulto={addSameBulto} 
+          addSameBulto={addSameBulto}
+          handleAtiende={handleAtiende}
+          atiende ={atiende}
           useSameID={useSameID}
           setUseSameID={setUseSameID}/>
         </ComponentCard>
         <ComponentCard title="Secos">
           <BasicTableMulti 
             tableData={tableData_secos} 
-            setTableData={setTableDataSecos} 
+            
             addBulto={addBulto} 
+            handleAtiende={handleAtiende}
+          atiende ={atiende}
             addSameBulto={addSameBulto}
             useSameID={useSameID}
             setUseSameID={setUseSameID} />

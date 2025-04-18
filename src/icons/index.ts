@@ -54,8 +54,10 @@ import { ReactComponent as AlertHexaIcon } from "./alert-hexa.svg?react";
 import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
 import { ReactComponent as DeleteIcon } from "./delete.svg?react";
 import { ReactComponent as PrintIcon } from "./local_printshop.svg?react";
+import { ReactComponent as EditIcon } from "./pen-to-square-regular.svg?react";
 
 export {
+  EditIcon,
   PrintIcon,
   ErrorHexaIcon,
   AlertHexaIcon,
