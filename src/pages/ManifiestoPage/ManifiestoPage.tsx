@@ -756,7 +756,7 @@ export default function ManifiestoPage() {
 
   
 
-  const [data, setData] = useState<HeaderData>({
+  const [, setData] = useState<HeaderData>({
     no: 0,
     frios: 0,
     seco: 0,
