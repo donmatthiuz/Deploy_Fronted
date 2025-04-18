@@ -6,6 +6,10 @@
   }
 }
 
+.page-break {
+  page-break-after: always;
+  break-after: page;
+}
 
 .label-name, .label-name-2 {
   font-weight: bold;
@@ -203,8 +207,9 @@
 }
 .contenido{
   font-family: Arial, sans-serif;
-  font-size: 18px;
+  font-size: 11px;
   height: max-content;
+  min-height: 90px;
   display: flex;
   border: 1px solid #81493b;
 }

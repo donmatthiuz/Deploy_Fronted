@@ -76,49 +76,57 @@ export default function BasicTableMulti({ tableData,  addBulto , setUseSameID, u
       </div>
 
       <div className="max-w-full overflow-x-auto">
-        <div className="min-w-[800px]">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell isHeader className="w-1/5 text-center">
-                  <input type="checkbox" disabled />
-                </TableCell>
-                <TableCell isHeader className="w-1/5 text-center">Código</TableCell>
-                <TableCell isHeader className="w-1/5 text-center">Descripción</TableCell>
-                <TableCell isHeader className="w-1/5 text-center">Peso (Lbs)</TableCell>
-                <TableCell isHeader className="w-1/5 text-center">Tipo</TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tableData.map((item ,index) => (
-                <TableRow 
-                  key={item.id}
-                  className={index % 2 === 0 ? 
-                    'bg-gray-50 dark:bg-gray-800/50' : 'bg-gray-200 dark:bg-gray-700'}
+  <div className="min-w-[800px]">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableCell isHeader className="w-[100px] text-center">
+            <input type="checkbox" disabled />
+          </TableCell>
+          <TableCell isHeader className="w-1/5 text-center">Código</TableCell>
+          <TableCell isHeader className="w-1/5 text-center">Descripción</TableCell>
+          <TableCell isHeader className="w-1/5 text-center">Peso (Lbs)</TableCell>
+          <TableCell isHeader className="w-1/5 text-center">Tipo</TableCell>
+          <TableCell isHeader className="w-1/5 text-center">Envio</TableCell>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {tableData.map((item, index) => (
+          <TableRow
+            key={item.id}
+            className={
+              index % 2 === 0
+                ? "bg-gray-50 dark:bg-gray-800/50"
+                : "bg-gray-200 dark:bg-gray-700"
+            }
+          >
+            <TableCell className="w-1/20 text-center">
+              <input
+                type="checkbox"
+                checked={selectedRows.includes(item.id)}
+                onChange={() => handleSelectRow(item.id)}
+                className="cursor-pointer"
+              />
+            </TableCell>
 
-                  >
-                  <TableCell className="w-1/5 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(item.id)}
-                      onChange={() => handleSelectRow(item.id)}
-                      className="cursor-pointer"
-                    />
+            <TableCell className="w-1/30 text-center">{item.codigo}</TableCell>
+            <TableCell className="w-1/3 text-center">{item.contenido}</TableCell>
+            <TableCell className="w-1/10 text-center">{item.peso}</TableCell>
+            <TableCell className="w-1/10 text-center">{item.tipo}</TableCell>
+            <TableCell className="w-1/3 text-center">
+              {item.direccion_cliente_envia?.toLowerCase().includes("guatemala") ||
+              item.direccion_cliente_envia?.toLowerCase().includes("gt") ||
+              item.direccion_cliente_envia?.toLowerCase().includes("gua")
+                ? "Guatemala -> USA"
+                : "USA -> Guatemala"}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </div>
+</div>
 
-              
-
-                  </TableCell>
-                  
-                  <TableCell className="w-1/5 text-center">{item.codigo}</TableCell>
-                  <TableCell className="w-1/5 text-center">{item.contenido}</TableCell>
-                  <TableCell className="w-1/5 text-center">{item.peso}</TableCell>
-                  <TableCell className="w-1/5 text-center">{item.tipo}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
     </div>
   );
 }
@@ -126,12 +134,12 @@ export default function BasicTableMulti({ tableData,  addBulto , setUseSameID, u
 interface BultosTableProps {
   bultos: Item_Bulto[];
   delete_id_bulto: (id: number) => void;
-
+  imprimir: () => void;
   openInsert: (value: boolean) => void;
 
 }
 
-export function BultosTable({ bultos, delete_id_bulto, openInsert }: BultosTableProps) {
+export function BultosTable({ bultos, delete_id_bulto, openInsert, imprimir }: BultosTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] mt-6">
       <div className="p-4 bg-gray-100 dark:bg-gray-800 flex justify-between items-center">
@@ -151,7 +159,8 @@ export function BultosTable({ bultos, delete_id_bulto, openInsert }: BultosTable
                   }>
                   Nuevo Bulto
                 </Button>
-                <Button size="sm">
+                <Button size="sm"
+                  onClick={imprimir}>
                   Imprimir
                 </Button>
 
@@ -178,11 +187,12 @@ export function BultosTable({ bultos, delete_id_bulto, openInsert }: BultosTable
                   'bg-gray-50 dark:bg-gray-800/50' : 'bg-gray-200 dark:bg-gray-700'}
 >
                   
-                  <TableCell className="w-1/5 text-center">{bulto.id}</TableCell>
-                  <TableCell className="w-1/5 text-center">{bulto.codigo}</TableCell>
-                  <TableCell className="w-1/5 text-center">{bulto.contenido}</TableCell>
+                  <TableCell className="w-1/10 text-center">{bulto.id}</TableCell>
+                  <TableCell className="w-1/11 text-center">{bulto.codigo}</TableCell>
+                  <TableCell className="w-1/2 text-center">{bulto.contenido}</TableCell>
                   <TableCell className="w-1/5 text-center">{bulto.peso}</TableCell>
                   <TableCell className="w-1/5 text-center">{bulto.tipo}</TableCell>
+                  
  
                   <TableCell className="w-1/5 text-center">
                   <Button size="sm"  variant="outline"    

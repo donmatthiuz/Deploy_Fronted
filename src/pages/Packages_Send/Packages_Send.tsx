@@ -10,7 +10,9 @@ import PAGE_NAME from "../../pronto";
 
 // Función para calcular el rango de fechas de la semana (jueves a miércoles)
 const getWeekRange = () => {
-  const today = new Date();
+  const today_ = new Date();
+  const today = new Date(today_.getFullYear(), today_.getMonth(), today_.getDate());
+
   const dayOfWeek = today.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
   
   // Calcular el jueves más cercano (inicio de la semana)

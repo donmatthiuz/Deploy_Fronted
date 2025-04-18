@@ -4,7 +4,7 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import ComponentCard from "../../components/common/ComponentCard";
 import BasicTableMulti from "../../components/tables/BasicTableMulti";
 import { BultosTable } from "../../components/tables/BasicTableMulti";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import source_link from "../../repositori/source_repo";
 import useApi from "../../hooks/useApi";
 import { saveAs } from "file-saver";
@@ -20,7 +20,33 @@ import TextArea from "../../components/form/input/TextArea";
 import { object, string, number } from 'yup';
 import useForm from "../../hooks/useForm";
 import Checkbox from "../../components/form/input/Checkbox";
+import DocGenerator from "./DocGenerator";
+import { useReactToPrint } from "react-to-print";
+import Bauncher3 from "../../components/Bauncher3/Bauncher3";
 
+
+interface Bauncher_data {
+  bulto: number;
+  peso: string;
+  envia: string;
+  direccion_envia: string;
+  ciudad_envia: string;
+  identif_envia: string;
+  telefono_envia: string;
+  recibe: string;
+  direccion_recibe: string;
+  ciudad_recibe: string;
+  region: string;
+  codigo_postal: string;
+  telefono_recibe: string;
+  identif_recibe: string;
+  descripcion: string[];
+  contenido: string;
+  codigo: string;
+  atendido: string;
+  oficina: string;
+  tipo: string;
+}
 
 
 interface Direccion {
@@ -31,6 +57,37 @@ interface Direccion {
   postal: string;
   pais_id: number;
 }
+
+
+const printStyles = `
+  @media print {
+    .bauncher-print {
+      page-break-inside: avoid;
+      page-break-after: auto;
+      page-break-before: auto;
+      max-height: fit-content;
+      max-width: fit-content;
+    }
+
+    .total {
+      display: none;
+    }
+  }
+
+  .bauncher-print {
+    height: fit-content;
+    width: fit-content;
+    display: none;
+  }
+
+  @media print {
+    html, body {
+      height: initial !important;
+      overflow: initial !important;
+    }
+  }
+`;
+
 
 interface Bulto {
   id_real: number;
@@ -49,6 +106,7 @@ interface Bulto {
   envia_direccion: Direccion;
   recibe_direccion: Direccion;
   costodolares: number;
+  atendido: string;
 }
 
 
@@ -112,14 +170,26 @@ export interface Item_Bulto {
   telefonorecibe: string;
 }
 
-
+interface HeaderData {
+  no: number;
+  frios: number;
+  seco: number;
+  kg: number;
+}
 
 export default function ManifiestoPage() {
 
 
- 
+  // const handleClick = () => {
+  //   DocGenerator({
+  //     no: 25,
+  //     frios: 10,
+  //     seco: 15,
+  //     kg: 320
+  //   });
+  // };
 
-  const contarTiposBultos = (bultos: Bulto[]) => {
+  const contarTiposBultos = (bultos: Item_Bulto[]) => {
     const idsUnicos = new Set<number>();
     let seco = 0;
     let frio = 0;
@@ -160,7 +230,7 @@ export default function ManifiestoPage() {
   const {llamado: obtener_telefono_aleatoria} = useApi(`${source_link}/obtener_telefono_aleatoria`)
 
 
-  const { llamado: getPaquetedata } = useApi(`${source_link}/getPaquetedata`);
+  
 
   const { llamado: getBultos_Manifiesto } = useApi(`${source_link}/getBultos_Manifiesto`);
 
@@ -177,6 +247,8 @@ export default function ManifiestoPage() {
   const [usa, setUsa] = useState(false)
   const [gt, setGT] = useState(true)
   
+
+  const [isModal3, setModal3] = useState(false)
 
 
   const { values, setValue } = useForm(schma_insert, { 
@@ -199,11 +271,24 @@ export default function ManifiestoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalOpen2, setIsModalOpen2] = useState(false);
 
-
+  const [codigos, setCodigos] = useState({
+    codigoInicio: "",
+    codigoFinal: "",
+  });
+  const handleCodigos_print = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCodigos(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  
+  
 
 
   const closeModal = () => setIsModalOpen(false);
   const closeModal2 = () => setIsModalOpen2(false);
+  const closeModal3 = () => setModal3(false)
 
 
   
@@ -274,7 +359,7 @@ export default function ManifiestoPage() {
     }));
   
   
-    console.log("Datos para exportar:", data_bultos);  // Debugging log to check data
+    
   
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Bultos');
@@ -664,10 +749,19 @@ export default function ManifiestoPage() {
   const [tableData_frios, setTableDataFrios] = useState<Item[]>([]);
   const [tableData_secos, setTableDataSecos] = useState<Item[]>([]);
 
-  const [bultos_geted , setBultosGeted] = useState<Bulto[]>([])
 
+  
 
+  const [infoBauncher, setInfoBauncher] = useState<Bauncher_data[]>([]);
 
+  
+
+  const [data, setData] = useState<HeaderData>({
+    no: 0,
+    frios: 0,
+    seco: 0,
+    kg: 0,
+  });
 
   const [atiende, setAtiende] = useState('')
 
@@ -694,7 +788,9 @@ export default function ManifiestoPage() {
   
 
   const getWeekRange = () => { 
-    const today = new Date();
+    const t = new Date();
+    const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+
     const dayOfWeek = today.getDay();
     const startDate = new Date(today);
     startDate.setDate(today.getDate() - ((dayOfWeek + 3) % 7));
@@ -730,16 +826,29 @@ export default function ManifiestoPage() {
   
     return 0;
   }
+
+  const [readyToPrint, setReadyToPrint] = useState(false); // 👈 estado de control
+
   
 
   
   const { range, fecha_inicio, fecha_fin } = getWeekRange();
 
   useEffect(() => {
+    if (readyToPrint && infoBauncher.length > 0) {
+      handlePrint_bauncher();
+      setReadyToPrint(false); // 👈 resetear para evitar múltiples impresiones
+    }
+  }, [readyToPrint, infoBauncher]);
+
+  
+  useEffect(() => {
     if (codigo=='' || codigo == null ){
       setIsModalOpen(true)
      }
      
+    
+    
     
     const get_frios = async () => {
       const body_frio = { fecha_inicio, fecha_fin, tipo: "Frio" };
@@ -751,7 +860,12 @@ export default function ManifiestoPage() {
       
       
 
-     
+      const respuesta_cantidad = contarTiposBultos(reposne_bultos.response.bultos)
+      updateField("no", respuesta_cantidad.total);
+      updateField("seco", respuesta_cantidad.seco);
+      updateField("frios", respuesta_cantidad.frio);
+      updateField("kg", reposne_bultos.response.totalKilos);
+
       
       setBultos(reposne_bultos.response.bultos);
       setPesoTotal(reposne_bultos.response.totalKilos)
@@ -760,7 +874,7 @@ export default function ManifiestoPage() {
       setTableDataSecos(response2.response);
 
 
-      console.log(response)
+      
     };
     get_frios();
   }, [reload]);
@@ -945,7 +1059,13 @@ export default function ManifiestoPage() {
 
   }
 
-
+  const updateField = (field: keyof HeaderData, value: number) => {
+    setData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+  
 
   const addSameBulto = (items: Item[]) => {
     console.log(items)
@@ -977,7 +1097,7 @@ export default function ManifiestoPage() {
 
     if (response.success){
       setValue("envia", response.respuesta.id)
-      console.log(response.respuesta.id)
+      
     }else{
       setValue("envia", "No tenemos mas nombres")
     }
@@ -1024,14 +1144,156 @@ export default function ManifiestoPage() {
 
   }
 
+  
+  const obtenerIdsEnRango = (codigoInicio: string, codigoFinal: string) => {
+    let enRango = false;
+    const idsRealEnRango: number[] = [];
+  
+    for (const bulto of bultos) {
+      // Si encontramos el bulto de inicio, comenzamos a agregar los id_real
+      if (bulto.codigo === codigoInicio) {
+        enRango = true; // Comienza el rango
+        // Verificar que id_real no sea null ni undefined antes de agregarlo
+        if (bulto.id_real !== null && bulto.id_real !== undefined) {
+          idsRealEnRango.push(bulto.id_real); // Agregamos el primer id_real
+        }
+      }
+  
+      // Si estamos dentro del rango, agregamos los id_real
+      if (enRango && bulto.codigo !== codigoFinal) {
+        if (bulto.id_real !== null && bulto.id_real !== undefined) {
+          idsRealEnRango.push(bulto.id_real); // Agregamos los id_real dentro del rango
+        }
+      }
+  
+      // Cuando llegamos al código final, agregamos el id_real y salimos del rango
+      if (enRango && bulto.codigo === codigoFinal) {
+        if (bulto.id_real !== null && bulto.id_real !== undefined) {
+          idsRealEnRango.push(bulto.id_real); // Agregamos el último id_real
+        }
+        break; // Terminamos el rango
+      }
+    }
+    const idsUnicos = [...new Set(idsRealEnRango)];
+    return idsUnicos;
+  };
+  
+  
+  const imprimir_bultos = async() => {
+    const bultos_en_rango = obtenerIdsEnRango(codigos.codigoInicio, codigos.codigoFinal)
+
+    const respuesta = await obtener_manifiesto(
+      {
+        id_number: bultos_en_rango,
+        numero_guia: codigo
+      }
+      ,"POST")
+    
+    if (respuesta.success){
+      
+
+
+      const datos_bultos_print: Bauncher_data[] = await Promise.all(
+        respuesta.response.map(async (bulto: Bulto): Promise<Bauncher_data> => {
+          return {
+            bulto: bulto.id,
+            peso: bulto.peso,
+            envia: bulto.envia,
+            direccion_envia: bulto.envia_direccion?.direccion ?? "",
+            ciudad_envia: bulto.envia_direccion?.ciudad ?? "",
+            identif_envia: "", // Suponiendo que no tienes este dato directamente
+            telefono_envia: bulto.telefonoenvia,
+            recibe: bulto.nombrerecibe,
+            direccion_recibe: bulto.recibe_direccion?.direccion ?? "",
+            ciudad_recibe: bulto.recibe_direccion?.ciudad ?? "",
+            region: bulto.recibe_direccion?.estado ?? "",
+            codigo_postal: bulto.recibe_direccion?.postal ?? "",
+            telefono_recibe: bulto.telefonorecibe,
+            identif_recibe: "", // Suponiendo que no tienes este dato directamente
+            descripcion: ["1 PAQUETE"], // Puedes rellenar con lo que haga falta
+            contenido: bulto.contenido,
+            codigo: bulto.codigo,
+            atendido: bulto.atendido.toUpperCase(),
+            oficina: bulto.recibe_direccion.ciudad, // Igual, depende de tu lógica
+            tipo: bulto.tipo,
+          };
+        })
+      );
+      
+
+      setInfoBauncher(datos_bultos_print)
+      
+      setReadyToPrint(true); 
+
+    }else{
+
+      Swal.fire({
+        icon: 'error',
+        title: 'No se encontro los datos',
+        text: 'Hubo un error para imprimir, verifique que el rango sea correcto',
+        confirmButtonText: 'Aceptar'
+      });
+
+    }
+
+  }
+  
+  const componentRef = useRef<HTMLDivElement | null>(null);
+  const handlePrint_bauncher = useReactToPrint({
+      contentRef: componentRef,
+      documentTitle: "Sticker Manifiesto",
+      onAfterPrint: () => console.log("Impresión completada"),
+    });
  
   
-
-  // Calcular el peso total de los bultos en libras y convertir a kilos
- 
-
+   
+    
   return (
     <>
+    <style>{printStyles}</style>
+    <div className="bauncher-print"  >
+    <Bauncher3  info_list={infoBauncher} ref={componentRef}     />
+    </div>
+           <Modal isOpen={isModal3} onClose={closeModal3} showCloseButton={true}>
+            <div>
+              <ComponentCard title="Imprimir en Rango">
+                <div className="space-y-4">
+                  <div className="flex space-x-4">
+                    <div className="flex flex-col w-1/2">
+                      <Label htmlFor="codigoInicio">Código Inicio</Label>
+                      <Input 
+                        type="text" 
+                        id="codigoInicio"
+                        name="codigoInicio"
+                        value={codigos.codigoInicio}
+                        onChange={handleCodigos_print}
+                    
+                      />
+                    </div>
+
+                    <div className="flex flex-col w-1/2">
+                      <Label htmlFor="codigoFinal">Código Final</Label>
+                      <Input 
+                        type="text" 
+                        id="codigoFinal"
+                        name="codigoFinal"
+                        value={codigos.codigoFinal}
+                        onChange={handleCodigos_print}
+
+                  
+                      />
+                    </div>
+                  </div>
+
+                  <Button size="sm" onClick={imprimir_bultos} className="w-full">
+                    Imprimir
+                  </Button>
+                </div>
+              </ComponentCard>
+            </div>
+          </Modal>
+
+
         <Modal isOpen={isModalOpen} onClose={closeModal} showCloseButton={true}>
           <div>
           <ComponentCard title="No tienes numero Guia">
@@ -1054,164 +1316,164 @@ export default function ManifiestoPage() {
         </Modal>
 
         <Modal isOpen={isModalOpen2} onClose={closeModal2} showCloseButton={true}>
-  <div>
-    <ComponentCard title="Agregar Nuevo Bulto">
+                <div>
+                  <ComponentCard title="Agregar Nuevo Bulto">
 
-          {/* Numero de Bulto */}
-          <div>
-            <Label htmlFor="bulto">Numero de Bulto</Label>
-            <Input
-              type="number"
-              id="bulto"
-              value={values.bulto}
-              name="bulto"
-              onChange={handleChange_useForm}
-            />
-          </div>
-          {/* Nombre Envia y Nombre Recibe */}
-          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-            {/* Nombre Envia */}
-            <div style={{ flex: 1 }}>
-              <Label>Nombre Envia</Label>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <Input
-                  type="text"
-                  value={values.envia}
-                  name="envia"
-                  onChange={handleChange_useForm}
-                />
-                <Button size="sm" onClick={obtener_nombre_envia}>Obtener Nombre</Button>
-              </div>
-            </div>
+                        {/* Numero de Bulto */}
+                        <div>
+                          <Label htmlFor="bulto">Numero de Bulto</Label>
+                          <Input
+                            type="number"
+                            id="bulto"
+                            value={values.bulto}
+                            name="bulto"
+                            onChange={handleChange_useForm}
+                          />
+                        </div>
+                        {/* Nombre Envia y Nombre Recibe */}
+                        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                          {/* Nombre Envia */}
+                          <div style={{ flex: 1 }}>
+                            <Label>Nombre Envia</Label>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                              <Input
+                                type="text"
+                                value={values.envia}
+                                name="envia"
+                                onChange={handleChange_useForm}
+                              />
+                              <Button size="sm" onClick={obtener_nombre_envia}>Obtener Nombre</Button>
+                            </div>
+                          </div>
 
-            {/* Nombre Recibe */}
-            <div style={{ flex: 1 }}>
-              <Label>Nombre Recibe</Label>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <Input
-                  type="text"
-                  value={values.nombrerecibe}
-                  name="nombrerecibe"
-                  onChange={handleChange_useForm}
-                />
-                <Button size="sm" onClick={obtener_nombre_recibe}>Obtener Nombre</Button>
-              </div>
-            </div>
-            
-          </div>
-
-
-          {/* Teléfono */}
-          <div style={{ display: 'flex', gap: '10rem', flexWrap: 'wrap' }}>
-          <div>
-              <Label>Tipo de Envio:</Label>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <label>
-              <Checkbox
-                checked={gt}
-                onChange={setGT}
-                label=" Guatemala a USA"
-              />
-            </label>
-            <label>
-            <Checkbox
-                checked={usa}
-                onChange={setUsa}
-                label="USA a GT"
-              />
-
-            </label>
-            
-          </div>    
-            </div>
-          <div>
-            <Label>Telefono Recibe</Label>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <Input
-                type="number"
-                value={values.telefonorecibe}
-                name="telefonorecibe"
-                onChange={handleChange_useForm}
-              />
-              <Button size="sm" onClick={()=>obtener_telefono(1)}>Numero M</Button>
-              <Button size="sm" onClick={()=>obtener_telefono(2)}>Numero NY</Button>
-            </div>
-          </div>
-          </div>
-          {/* Contenido */}
-          <div>
-            <Label>Contenido</Label>
-            <TextArea rows={3} 
-              value={values.contenidoes} 
-              onChange={(value) => setValue("contenidoes",value)}
-
-            />
-          </div>
-
-          {/* Peso y Código */}
-          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-            <div>
-              <Label>Peso lb:</Label>
-              <Input
-                type="number"
-                value={values.pesolb}
-                name="pesolb"
-                onChange={handleChange_useForm}
-              />
-            </div>
-            <div>
-              <Label>Codigo:</Label>
-              <Input
-                type="text"
-                value={values.codigo}
-                name="codigo"
-                onChange={handleChange_useForm}
-              />
-            </div>
-
-            <div>
-              <Label>Atendido por:</Label>
-              <Input
-                type="text"
-                value={values.atendido}
-                name="atendido"
-                onChange={handleChange_useForm}
-              />
-            </div>
-            <div>
-              <Label>Tipo:</Label>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <label>
-            <Checkbox 
-          checked={seco} 
-          onChange={setSeco}
-          label="SECO" />
-          
-               </label>
-            <label>
-            <Checkbox 
-          checked={frio} 
-          onChange={setFrio}
-          label="FRIO" />
-            </label>
-            
-          </div>    
-            </div>
-          </div>
-
-          {/* SECO / FRIO y Atendido */}
-          <Button
-            size="sm"
-            onClick={enviar_pedido}
-            className="w-full"
-          >
-            Insertar Bulto
-          </Button>
+                          {/* Nombre Recibe */}
+                          <div style={{ flex: 1 }}>
+                            <Label>Nombre Recibe</Label>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                              <Input
+                                type="text"
+                                value={values.nombrerecibe}
+                                name="nombrerecibe"
+                                onChange={handleChange_useForm}
+                              />
+                              <Button size="sm" onClick={obtener_nombre_recibe}>Obtener Nombre</Button>
+                            </div>
+                          </div>
+                          
+                        </div>
 
 
-        </ComponentCard>
-      </div>
-    </Modal>
+                        {/* Teléfono */}
+                        <div style={{ display: 'flex', gap: '10rem', flexWrap: 'wrap' }}>
+                        <div>
+                            <Label>Tipo de Envio:</Label>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                          <label>
+                            <Checkbox
+                              checked={gt}
+                              onChange={setGT}
+                              label=" Guatemala a USA"
+                            />
+                          </label>
+                          <label>
+                          <Checkbox
+                              checked={usa}
+                              onChange={setUsa}
+                              label="USA a GT"
+                            />
+
+                          </label>
+                          
+                        </div>    
+                          </div>
+                        <div>
+                          <Label>Telefono Recibe</Label>
+                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                            <Input
+                              type="number"
+                              value={values.telefonorecibe}
+                              name="telefonorecibe"
+                              onChange={handleChange_useForm}
+                            />
+                            <Button size="sm" onClick={()=>obtener_telefono(1)}>Numero M</Button>
+                            <Button size="sm" onClick={()=>obtener_telefono(2)}>Numero NY</Button>
+                          </div>
+                        </div>
+                        </div>
+                        {/* Contenido */}
+                        <div>
+                          <Label>Contenido</Label>
+                          <TextArea rows={3} 
+                            value={values.contenidoes} 
+                            onChange={(value) => setValue("contenidoes",value)}
+
+                          />
+                        </div>
+
+                        {/* Peso y Código */}
+                        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                          <div>
+                            <Label>Peso lb:</Label>
+                            <Input
+                              type="number"
+                              value={values.pesolb}
+                              name="pesolb"
+                              onChange={handleChange_useForm}
+                            />
+                          </div>
+                          <div>
+                            <Label>Codigo:</Label>
+                            <Input
+                              type="text"
+                              value={values.codigo}
+                              name="codigo"
+                              onChange={handleChange_useForm}
+                            />
+                          </div>
+
+                          <div>
+                            <Label>Atendido por:</Label>
+                            <Input
+                              type="text"
+                              value={values.atendido}
+                              name="atendido"
+                              onChange={handleChange_useForm}
+                            />
+                          </div>
+                          <div>
+                            <Label>Tipo:</Label>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                          <label>
+                          <Checkbox 
+                        checked={seco} 
+                        onChange={setSeco}
+                        label="SECO" />
+                        
+                            </label>
+                          <label>
+                          <Checkbox 
+                        checked={frio} 
+                        onChange={setFrio}
+                        label="FRIO" />
+                          </label>
+                          
+                        </div>    
+                          </div>
+                        </div>
+
+                        {/* SECO / FRIO y Atendido */}
+                        <Button
+                          size="sm"
+                          onClick={enviar_pedido}
+                          className="w-full"
+                        >
+                          Insertar Bulto
+                        </Button>
+
+
+                      </ComponentCard>
+                    </div>
+                  </Modal>
 
 
       <PageMeta
@@ -1237,14 +1499,21 @@ export default function ManifiestoPage() {
       
       <div className="space-y-6">
     
-              <Button size="sm" onClick={exportToExcel}>
+
+            <div style={{display: 'flex', flexDirection: 'row' , gap: '2rem'}}>
+            <Button size="sm" onClick={exportToExcel}>
               Descargar Manifiestos
                 </Button>
+              
+                <DocGenerator headerData={data} />
+            </div>
+              
                 <PageBreadcrumb pageTitle={`Total: ${peso_Total.toFixed(2)}KG`} />
         <ComponentCard title="Bultos">
 
           <BultosTable
             openInsert={setIsModalOpen2}
+            imprimir={()=>setModal3(true)}
             bultos={bultos}
             delete_id_bulto={delete_id_bulto} />
         </ComponentCard>
