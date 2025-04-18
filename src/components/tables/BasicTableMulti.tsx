@@ -114,11 +114,12 @@ export default function BasicTableMulti({ tableData,  addBulto , setUseSameID, u
             <TableCell className="w-1/10 text-center">{item.peso}</TableCell>
             <TableCell className="w-1/10 text-center">{item.tipo}</TableCell>
             <TableCell className="w-1/3 text-center">
-              {item.direccion_cliente_envia?.toLowerCase().includes("guatemala") ||
-              item.direccion_cliente_envia?.toLowerCase().includes("gt") ||
-              item.direccion_cliente_envia?.toLowerCase().includes("gua")
-                ? "Guatemala -> USA"
-                : "USA -> Guatemala"}
+            {String(item.direccion_cliente_envia)?.toLowerCase().includes("guatemala") ||
+            String(item.direccion_cliente_envia)?.toLowerCase().includes("gt") ||
+            String(item.direccion_cliente_envia)?.toLowerCase().includes("gua")
+            ? "Guatemala -> USA"
+            : "USA -> Guatemala"}
+
             </TableCell>
           </TableRow>
         ))}
